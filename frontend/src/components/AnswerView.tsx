@@ -4,6 +4,7 @@ import { api, type Checks, type Run } from "../api";
 import { EvidencePanel, FlagList, HighlightedAnswer, PartsList, RuleSummary } from "./Evidence";
 import { ErrorNote } from "./ui";
 import VerdictBanner from "./VerdictBanner";
+import WhatChanged from "./WhatChanged";
 
 function firstProblem(checks: Checks): number | null {
   const order = ["Contradicted", "Unsupported", "Unable to verify", "Partly supported"];
@@ -36,9 +37,11 @@ export default function AnswerView({ run, onChange }: { run: Run; onChange: (r: 
   return (
     <div className="card space-y-4">
       <div className="text-xs font-bold uppercase tracking-wide text-ink-muted">OCBC AI (simulated) · answer checked by Q AI</div>
-      <VerdictBanner verdict={checks.verdict} inReview={inReview} />
+      <VerdictBanner verdict={checks.verdict} inReview={inReview} corrected={run.retried} />
 
       <HighlightedAnswer checks={checks} selected={selected} onSelect={setSelected} />
+
+      <WhatChanged run={run} />
 
       <div className="rounded-xl border border-line bg-surface p-4">
         <EvidencePanel sentence={sentence} />

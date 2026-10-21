@@ -19,6 +19,7 @@ from app.services.audit import log_event
 from app.services.checks.runner import run_checks
 from app.services.prompt_check import run_prompt_check
 from app.services.review import enqueue
+from app.services.self_correction import build_feedback, what_changed
 from app.services.verdict import route
 
 log = logging.getLogger(__name__)
@@ -89,7 +90,10 @@ async def process_run(run_id: int) -> None:
             # Step 5: verdict and routing
             await _set_stage(db, run, "Deciding verdict")
             run.original_verdict = checks["verdict"]
-            _finish(db, run, answer, checks, retried=False)
+            if route(checks["verdict"], retried=False) == "retry":
+                await _self_correct(db, run, answer, checks)
+            else:
+                _finish(db, run, answer, checks, retried=False)
             db.commit()
         except Exception as e:  # keep the error visible on the chat page
             log.exception("Run %s failed", run_id)
@@ -99,13 +103,35 @@ async def process_run(run_id: int) -> None:
             db.commit()
 
 
+async def _self_correct(db: Session, run: Run, answer: str, checks: dict) -> None:
+    """Step 5b: one retry for an Amber answer, then Steps 4 and 5 again."""
+    pc = run.prompt_check or {}
+    feedback, flagged, _ = build_feedback(checks)
+    run.retried, run.retry_feedback = True, feedback
+    log_event(db, "retry_requested", run.id, flagged=flagged)
+
+    await _set_stage(db, run, "Self-correcting: OCBC AI tries once more")
+    retry, context = await ocbc_ai.generate_answer(
+        db, run.question, run.details or {}, pc.get("search_query", run.question), pc.get("parts", []),
+        feedback=feedback, previous_answer=answer, flagged=flagged,
+    )
+    run.retry_answer, run.retry_context = retry, context
+    log_event(db, "ocbc_retried", run.id, answer=retry)
+
+    await _set_stage(db, run, "Re-checking the corrected answer")
+    retry_checks = await run_checks(retry, run.question, run.details or {}, pc.get("parts", []), run.topic)
+    run.retry_checks, run.retry_verdict = retry_checks, retry_checks["verdict"]
+    log_event(db, "retry_checked", run.id, verdict=retry_checks["verdict"],
+              flags=[f["type"] for f in retry_checks["flags"]])
+    _finish(db, run, retry, retry_checks, retried=True)
+
+
 def _finish(db: Session, run: Run, answer: str, checks: dict, retried: bool) -> None:
     """Apply the routing rule. Q AI never edits the answer: the employee sees it as written."""
     verdict = checks["verdict"]
     where = route(verdict, retried)
-    if where == "retry":
-        # Step 5b (self-correction) is added in phase 4; until then Amber goes to review
-        where = "review"
+    if where == "retry":  # cannot happen when retried=True: the retry limit is one
+        raise RuntimeError("retry requested twice")
     run.final_answer, run.final_verdict, run.routed_to = answer, verdict, where
     if where == "review":
         reason = "red" if verdict == "Red" else "amber_after_retry"
@@ -140,9 +166,12 @@ def run_to_dict(run: Run) -> dict:
         "original_checks": run.original_checks,
         "original_verdict": run.original_verdict,
         "retried": run.retried,
+        "retry_feedback": run.retry_feedback,
         "retry_answer": run.retry_answer,
         "retry_checks": run.retry_checks,
         "retry_verdict": run.retry_verdict,
+        "what_changed": what_changed(run.original_answer, run.retry_answer)
+        if run.original_answer and run.retry_answer else [],
         "final_answer": run.final_answer,
         "final_verdict": run.final_verdict,
         "routed_to": run.routed_to,

@@ -136,6 +136,8 @@ export interface Run {
   original_checks: Checks | null;
   original_verdict: Verdict | null;
   retried: boolean;
+  retry_feedback: string | null;
+  what_changed: { type: "same" | "removed" | "added"; text: string }[];
   retry_answer: string | null;
   retry_checks: Checks | null;
   retry_verdict: Verdict | null;

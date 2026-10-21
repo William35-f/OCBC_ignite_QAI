@@ -11,6 +11,8 @@ export const STAGES = [
   "Checking rules, sources and intent",
   "Deciding verdict",
 ];
+// Only shown when an Amber answer gets its one retry (Step 5b)
+const RETRY_STAGES = ["Self-correcting: OCBC AI tries once more", "Re-checking the corrected answer"];
 
 const POLL_MS = 400;
 
@@ -120,14 +122,16 @@ export default function RunCard({ initial }: { initial: Run }) {
 }
 
 function Progress({ stage }: { stage: string }) {
+  // The retry steps only appear once an Amber answer is being retried
+  const steps = RETRY_STAGES.includes(stage) ? [...STAGES, ...RETRY_STAGES] : STAGES;
   // "Queued" (prompt check done, OCBC AI not started yet) counts as the second step
-  const found = STAGES.indexOf(stage);
+  const found = steps.indexOf(stage);
   const current = found === -1 ? 1 : found;
   return (
     <div className="card py-4" role="status" aria-live="polite">
       <p className="mb-2 text-sm font-semibold">Checking…</p>
       <ol className="space-y-1.5 text-sm">
-        {STAGES.map((s, i) => {
+        {steps.map((s, i) => {
           const state = current === -1 ? "todo" : i < current ? "done" : i === current ? "now" : "todo";
           return (
             <li key={s} className="flex items-center gap-2">

@@ -111,6 +111,9 @@ def ocbc_answer(p: dict) -> str:
     details = {k: str(v).lower() for k, v in (p.get("details") or {}).items()}
     new_payee = details.get("payee_type") == "new"
 
+    if p.get("feedback"):
+        return _retry_answer(p)
+
     # Scenario 5: nothing in the knowledge base covers crypto
     if re.search(r"crypto|bitcoin|digital token", q):
         return "Cryptocurrency transfers to a customer's wallet usually complete within an hour."
@@ -165,6 +168,35 @@ def ocbc_answer(p: dict) -> str:
         )
 
     return _generic_answer(p)
+
+
+def _retry_answer(p: dict) -> str:
+    """Step 5b: OCBC AI answers again after Q AI's feedback."""
+    q = p["question"].lower()
+    previous = p.get("previous_answer") or ""
+    flagged = set(p.get("flagged_sentences") or [])
+
+    # Scenario 5: still no approved source
+    if re.search(r"crypto|bitcoin|digital token", q):
+        return "No approved source was found for cryptocurrency transfers, so I cannot confirm whether they are allowed."
+
+    # Scenario 2: drop the made-up arrival time, keep the supported fee
+    if previous.startswith("Transfers usually arrive within 1 business day."):
+        return (
+            "Arrival time depends on the receiving bank; the procedure does not state a fixed time. "
+            "There is no fee for transfers below S$1,000. (Payments Procedure v2026, §5)"
+        )
+
+    # Generic: keep only the sentences Q AI did not flag
+    kept = [s.raw for s in split_sentences(previous) if s.text not in flagged]
+    kept_text = " ".join(kept)
+    if not kept or not re.search(r"[A-Za-z]{3,}", re.sub(r"\([^)]*§[^)]*\)", "", kept_text)):
+        return "No approved source was found for this question in the procedures I can search."
+    # The citation may have sat on a removed sentence: re-attach it
+    citations = re.findall(r"\([^()]*§[^()]*\)", previous)
+    if citations and not re.search(r"\([^()]*§[^()]*\)", kept_text):
+        kept_text = f"{kept_text} {citations[-1]}"
+    return kept_text
 
 
 def _generic_answer(p: dict) -> str:

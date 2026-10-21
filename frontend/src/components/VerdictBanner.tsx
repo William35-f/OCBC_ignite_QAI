@@ -12,9 +12,19 @@ const STYLES = {
 
 const ICONS = { Green: "✓", Amber: "!", Red: "✕" };
 
-export default function VerdictBanner({ verdict, inReview }: { verdict: Verdict; inReview: boolean }) {
+export default function VerdictBanner({
+  verdict,
+  inReview,
+  corrected = false,
+}: {
+  verdict: Verdict;
+  inReview: boolean;
+  corrected?: boolean;
+}) {
   const v = VERDICTS[verdict];
-  const title = verdict === "Amber" && inReview ? "Amber: sent for review – check before acting" : v.title;
+  let title = v.title;
+  if (verdict === "Amber" && inReview) title = "Amber: sent for review – check before acting";
+  if (verdict === "Green" && corrected) title = "Green: corrected answer – checks passed";
   return (
     <div className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${STYLES[v.tone]}`} role="status">
       <span

@@ -19,8 +19,12 @@ async def generate_answer(
     parts: list[str],
     feedback: str = "",
     previous_answer: str = "",
+    flagged: list[str] | None = None,
 ) -> tuple[str, list[dict]]:
-    """Return (answer text with citations, the passages it was given)."""
+    """Return (answer text with citations, the passages it was given).
+
+    For a Step 5b retry, `feedback` holds Q AI's flags and the correct passages,
+    and `flagged` the sentences Q AI could not support."""
     kb = get_kb()
     hits = kb.search(search_query or question, TOP_K, ocbc_enabled_doc_ids(db))
     passages = [
@@ -41,7 +45,8 @@ async def generate_answer(
         "details": details,
         "parts": parts,
         "passages": passages,
-        "feedback": f"Feedback on your previous answer:\n{feedback}" if feedback else "",
+        "feedback": f"Your previous answer:\n{previous_answer}\n\n{feedback}" if feedback else "",
         "previous_answer": previous_answer,
+        "flagged_sentences": flagged or [],
     }
     return await call_text("ocbc_answer", payload), passages
