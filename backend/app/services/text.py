@@ -122,4 +122,8 @@ def keywords(text: str) -> set[str]:
 ABSENCE_RE = re.compile(
     r"\b(does not (?:state|specify|say|mention)|is not (?:stated|specified)|no (?:fixed|stated|set) \w+)\b", re.I
 )
-NO_SOURCE_RE = re.compile(r"\bno approved (?:source|procedure)\b|\bcould not find\b", re.I)
+# Sentences where the answer itself says there is no source (Q AI cannot verify these)
+NO_SOURCE_RE = re.compile(
+    r"\bno approved (?:source|procedure)\b|\bcould not find\b|\bno (?:current )?(?:source|procedure) (?:was found|covers)\b",
+    re.I,
+)

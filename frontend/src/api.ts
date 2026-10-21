@@ -133,14 +133,14 @@ export interface Run {
   prompt_check: PromptCheck | null;
   topic: string | null;
   original_answer: string | null;
-  original_checks: unknown;
-  original_verdict: string | null;
+  original_checks: Checks | null;
+  original_verdict: Verdict | null;
   retried: boolean;
   retry_answer: string | null;
-  retry_checks: unknown;
-  retry_verdict: string | null;
+  retry_checks: Checks | null;
+  retry_verdict: Verdict | null;
   final_answer: string | null;
-  final_verdict: string | null;
+  final_verdict: Verdict | null;
   routed_to: string | null;
   employee_action: string | null;
 }
@@ -150,4 +150,38 @@ export interface Scenario {
   label: string;
   question: string;
   hint: string;
+}
+
+export type Verdict = "Green" | "Amber" | "Red";
+
+export interface Flag {
+  check: "A" | "B" | "C";
+  type: string;
+  severity: "critical" | "warning" | "info";
+  message: string;
+  sentence_index: number | null;
+  doc_ids: string[];
+}
+
+export interface SentenceView {
+  index: number;
+  text: string;
+  raw: string;
+  citations: { label: string; sections: string[]; doc_id: string | null; status: string; own: boolean }[];
+  label: string;
+  reason: string;
+  correction: string | null;
+  evidence: Evidence[];
+  ignored_conflicting: string[];
+  flag_types: string[];
+}
+
+export interface Checks {
+  verdict: Verdict;
+  flags: Flag[];
+  sentences: SentenceView[];
+  rule: Record<"citation_exists" | "source_current" | "figures_match" | "quotes_match", { passed: boolean; detail: unknown[] }>;
+  source: { exceptions: unknown[]; cited_doc_ids: string[]; skipped_sentences: number[] };
+  intent: { part: string; status: "answered" | "partly" | "not_answered"; reason: string }[];
+  ignored_figures: string[];
 }

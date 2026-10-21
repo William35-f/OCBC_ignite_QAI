@@ -1,5 +1,6 @@
 """Employee chat: ask a question, answer follow-up chips, poll the run."""
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -45,3 +46,23 @@ async def give_details(run_id: int, body: DetailsRequest, background: Background
 @router.get("/runs/{run_id}")
 def get_run(run_id: int, db: Session = Depends(get_db)):
     return workflow.run_to_dict(_get_run(db, run_id))
+
+
+class ReportRequest(BaseModel):
+    reason: str = Field(default="", max_length=300)
+
+
+@router.post("/runs/{run_id}/use")
+def use_answer(run_id: int, db: Session = Depends(get_db)):
+    run = _get_run(db, run_id)
+    if run.status != "done":
+        raise HTTPException(409, "The answer is not ready yet")
+    return workflow.run_to_dict(workflow.record_employee_action(db, run, "used"))
+
+
+@router.post("/runs/{run_id}/report")
+def report_problem(run_id: int, body: ReportRequest, db: Session = Depends(get_db)):
+    run = _get_run(db, run_id)
+    if run.status != "done":
+        raise HTTPException(409, "The answer is not ready yet")
+    return workflow.run_to_dict(workflow.record_employee_action(db, run, "reported", body.reason.strip()))

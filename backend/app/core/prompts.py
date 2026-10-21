@@ -90,6 +90,58 @@ Return JSON:
    "correction": "<only if Contradicted: one line starting 'Note:' with the correct fact, else null>"}} ]}}
 Return one entry per claim id.""",
     },
+    # ---- Step 4B: counter-evidence - missing exceptions (Q AI), one call ---------
+    "missing_exceptions": {
+        "system": (
+            "You are Q AI's exception checker. Bank procedures have conditions and exceptions that staff must not "
+            "miss. Reply with JSON only."
+        ),
+        "user": """Question: {question}
+Details: {details}
+
+Answer to check:
+{answer}
+
+Conditions and exceptions from the relevant CURRENT procedures:
+{conditions}
+
+For EACH condition decide:
+- applies: does it apply to this question and these details? ("applies_when" describes when it applies)
+- mentioned: does the answer tell the employee about it (same meaning, wording may differ)?
+
+Return JSON:
+{{"conditions": [ {{"id": "<condition id>", "applies": true|false, "mentioned": true|false, "reason": "<short>"}} ]}}
+Return one entry per condition id.""",
+    },
+    # ---- Step 4C: intent check (Q AI), one call ----------------------------------
+    "intent_check": {
+        "system": (
+            "You are Q AI's intent checker. You check that an answer covers every part of the employee's question. "
+            "Reply with JSON only."
+        ),
+        "user": """Question: {question}
+Details: {details}
+
+Question parts (checklist):
+{parts}
+
+Answer to check:
+{answer}
+
+For context, current procedure passages closest to each part:
+{reference_passages}
+
+Conditions that apply to this question:
+{applicable_conditions}
+
+For EACH part return:
+- "answered": the answer addresses the part fully
+- "partly": it addresses the part but leaves out something the employee needs (e.g. a required check)
+- "not_answered": it does not address the part (saying no source was found counts as not answered)
+
+Return JSON:
+{{"parts": [ {{"part": "<the part, copied exactly>", "status": "answered|partly|not_answered", "reason": "<short>"}} ]}}""",
+    },
 }
 
 

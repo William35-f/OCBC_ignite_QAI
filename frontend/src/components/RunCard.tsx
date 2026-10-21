@@ -1,10 +1,16 @@
 // One question in the chat thread: the prompt check, follow-up chips, progress and OCBC AI's answer.
 import { useEffect, useState } from "react";
 import { api, type Run } from "../api";
+import AnswerView from "./AnswerView";
 import { Badge, ErrorNote } from "./ui";
 
 // Workflow steps in order, as the backend names them in run.stage
-export const STAGES = ["Checking your question", "OCBC AI is answering"];
+export const STAGES = [
+  "Checking your question",
+  "OCBC AI is answering",
+  "Checking rules, sources and intent",
+  "Deciding verdict",
+];
 
 const POLL_MS = 400;
 
@@ -104,13 +110,8 @@ export default function RunCard({ initial }: { initial: Run }) {
       {/* Progress */}
       {(run.status === "running" || run.status === "checking_prompt") && <Progress stage={run.stage} />}
 
-      {/* OCBC AI answer */}
-      {run.original_answer && run.status === "done" && (
-        <div className="card space-y-2">
-          <div className="text-xs font-bold uppercase tracking-wide text-ink-muted">OCBC AI (simulated) · answer</div>
-          <p className="text-[15px] leading-relaxed">{run.final_answer ?? run.original_answer}</p>
-        </div>
-      )}
+      {/* OCBC AI answer with Q AI's evidence view */}
+      {run.status === "done" && run.original_checks && <AnswerView run={run} onChange={setRun} />}
 
       {run.status === "error" && <ErrorNote message={run.error ?? "The workflow failed."} />}
       {error && <ErrorNote message={error} />}
@@ -138,7 +139,12 @@ function Progress({ stage }: { stage: string }) {
                 </span>
               )}
               {state === "todo" && <span className="w-14 text-xs text-ink-muted">Waiting</span>}
-              <span className={state === "todo" ? "text-ink-muted" : "text-ink"}>{s}</span>
+              <span className={state === "todo" ? "text-ink-muted" : "text-ink"}>
+                {s}
+                {s === "Checking rules, sources and intent" && (
+                  <span className="block text-xs text-ink-muted">A rules · B sources · C intent, in parallel</span>
+                )}
+              </span>
             </li>
           );
         })}

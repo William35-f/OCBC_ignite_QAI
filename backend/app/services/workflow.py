@@ -7,6 +7,7 @@ The frontend polls the run to show the "Checking..." step labels.
 """
 import asyncio
 import logging
+from datetime import datetime
 
 from sqlalchemy.orm import Session
 
@@ -15,7 +16,10 @@ from app.core.db import SessionLocal
 from app.models import Run
 from app.services import ocbc_ai
 from app.services.audit import log_event
+from app.services.checks.runner import run_checks
 from app.services.prompt_check import run_prompt_check
+from app.services.review import enqueue
+from app.services.verdict import route
 
 log = logging.getLogger(__name__)
 
@@ -75,11 +79,17 @@ async def process_run(run_id: int) -> None:
             log_event(db, "ocbc_answered", run.id, answer=answer,
                       retrieved=[f"{c['label']} {c['section_label']}" for c in context])
 
-            # Steps 4-5 (checks and verdict) are added in phase 3
-            run.final_answer = answer
-            run.routed_to = "employee"
-            run.status, run.stage = "done", "Done"
-            log_event(db, "run_finished", run.id, routed_to=run.routed_to)
+            # Step 4: checks A, B and C in parallel
+            await _set_stage(db, run, "Checking rules, sources and intent")
+            checks = await run_checks(answer, run.question, run.details or {}, pc.get("parts", []), run.topic)
+            run.original_checks = checks
+            log_event(db, "answer_checked", run.id, verdict=checks["verdict"],
+                      flags=[f["type"] for f in checks["flags"]])
+
+            # Step 5: verdict and routing
+            await _set_stage(db, run, "Deciding verdict")
+            run.original_verdict = checks["verdict"]
+            _finish(db, run, answer, checks, retried=False)
             db.commit()
         except Exception as e:  # keep the error visible on the chat page
             log.exception("Run %s failed", run_id)
@@ -87,6 +97,31 @@ async def process_run(run_id: int) -> None:
             run.status, run.stage, run.error = "error", "Something went wrong", str(e)[:500]
             log_event(db, "run_failed", run.id, error=run.error)
             db.commit()
+
+
+def _finish(db: Session, run: Run, answer: str, checks: dict, retried: bool) -> None:
+    """Apply the routing rule. Q AI never edits the answer: the employee sees it as written."""
+    verdict = checks["verdict"]
+    where = route(verdict, retried)
+    if where == "retry":
+        # Step 5b (self-correction) is added in phase 4; until then Amber goes to review
+        where = "review"
+    run.final_answer, run.final_verdict, run.routed_to = answer, verdict, where
+    if where == "review":
+        reason = "red" if verdict == "Red" else "amber_after_retry"
+        enqueue(db, run, reason, checks)
+    run.status, run.stage = "done", "Done"
+    log_event(db, "run_finished", run.id, verdict=verdict, routed_to=where)
+
+
+def record_employee_action(db: Session, run: Run, action: str, reason: str = "") -> Run:
+    """Step 6 buttons: "Use answer" (logged) or "Report a problem" (goes to review)."""
+    run.employee_action, run.report_reason, run.employee_action_at = action, reason or None, datetime.now()
+    log_event(db, f"employee_{action}", run.id, actor=run.user_name, reason=reason)
+    if action == "reported":
+        enqueue(db, run, "reported", run.retry_checks or run.original_checks)
+    db.commit()
+    return run
 
 
 def run_to_dict(run: Run) -> dict:

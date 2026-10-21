@@ -1,0 +1,112 @@
+// Step 6 - the employee's evidence view for a checked answer.
+import { useState } from "react";
+import { api, type Checks, type Run } from "../api";
+import { EvidencePanel, FlagList, HighlightedAnswer, PartsList, RuleSummary } from "./Evidence";
+import { ErrorNote } from "./ui";
+import VerdictBanner from "./VerdictBanner";
+
+function firstProblem(checks: Checks): number | null {
+  const order = ["Contradicted", "Unsupported", "Unable to verify", "Partly supported"];
+  for (const label of order) {
+    const s = checks.sentences.find((x) => x.label === label);
+    if (s) return s.index;
+  }
+  return null;
+}
+
+export default function AnswerView({ run, onChange }: { run: Run; onChange: (r: Run) => void }) {
+  const checks = (run.retry_checks ?? run.original_checks) as Checks;
+  const [selected, setSelected] = useState<number | null>(() => firstProblem(checks));
+  const [reporting, setReporting] = useState(false);
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState("");
+  const inReview = run.routed_to === "review";
+  const sentence = checks.sentences.find((s) => s.index === selected);
+
+  const act = async (path: "use" | "report") => {
+    setError("");
+    try {
+      onChange(await api.post<Run>(`/api/chat/runs/${run.id}/${path}`, path === "report" ? { reason } : {}));
+      setReporting(false);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+
+  return (
+    <div className="card space-y-4">
+      <div className="text-xs font-bold uppercase tracking-wide text-ink-muted">OCBC AI (simulated) · answer checked by Q AI</div>
+      <VerdictBanner verdict={checks.verdict} inReview={inReview} />
+
+      <HighlightedAnswer checks={checks} selected={selected} onSelect={setSelected} />
+
+      <div className="rounded-xl border border-line bg-surface p-4">
+        <EvidencePanel sentence={sentence} />
+      </div>
+
+      <details className="group rounded-xl border border-line p-4" open={checks.verdict !== "Green"}>
+        <summary className="cursor-pointer text-sm font-bold">Why this verdict</summary>
+        <div className="mt-3 space-y-4">
+          <FlagList flags={checks.flags} />
+          {checks.intent.length > 0 && (
+            <div>
+              <p className="mb-1 text-sm font-semibold">Each part of your question</p>
+              <PartsList intent={checks.intent} />
+            </div>
+          )}
+          <RuleSummary rule={checks.rule} />
+        </div>
+      </details>
+
+      {/* Step 6 buttons */}
+      <div className="flex flex-wrap items-center gap-2 border-t border-line pt-4">
+        {run.employee_action === "used" && <p className="text-sm font-semibold text-ok">Logged: you used this answer.</p>}
+        {run.employee_action === "reported" && (
+          <p className="text-sm font-semibold text-brand-dark">Reported: sent to the review queue. Thank you.</p>
+        )}
+        {!run.employee_action && !reporting && (
+          <>
+            <button
+              className="btn-primary"
+              onClick={() => act("use")}
+              disabled={inReview}
+              title={inReview ? "Wait for the reviewer before acting on this answer" : undefined}
+            >
+              Use answer
+            </button>
+            <button className="btn-secondary" onClick={() => setReporting(true)}>
+              Report a problem
+            </button>
+            {inReview && <span className="text-xs text-ink-muted">“Use answer” is available after review.</span>}
+          </>
+        )}
+        {reporting && (
+          <form
+            className="flex w-full flex-wrap gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              act("report");
+            }}
+          >
+            <label htmlFor={`reason-${run.id}`} className="sr-only">
+              Reason (optional)
+            </label>
+            <input
+              id={`reason-${run.id}`}
+              className="input min-w-0 flex-1"
+              placeholder="What looks wrong? (optional, one line)"
+              maxLength={300}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            />
+            <button className="btn-primary">Send report</button>
+            <button type="button" className="btn-secondary" onClick={() => setReporting(false)}>
+              Cancel
+            </button>
+          </form>
+        )}
+      </div>
+      {error && <ErrorNote message={error} />}
+    </div>
+  );
+}

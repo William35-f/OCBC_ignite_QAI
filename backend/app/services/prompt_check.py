@@ -12,6 +12,12 @@ from app.services.checks.source_check import label_claims
 from app.services.knowledge_base import get_kb
 
 
+# Follow-up questions are only asked when the knowledge base clearly covers the
+# question. Asking "new or existing payee?" about crypto, which no procedure
+# covers, would not help anyone.
+STRONG_MATCH = 0.5
+
+
 def _candidate_documents(question: str) -> list[dict]:
     """The current documents closest to the question, most relevant first."""
     kb, seen, docs = get_kb(), set(), []
@@ -20,7 +26,8 @@ def _candidate_documents(question: str) -> list[dict]:
         if d.id in seen:
             continue
         seen.add(d.id)
-        docs.append({"id": d.id, "label": d.label, "topic": d.topic, "required_details": d.required_details})
+        docs.append({"id": d.id, "label": d.label, "topic": d.topic, "required_details": d.required_details,
+                     "score": hit.score})
     return docs[:3]
 
 
@@ -42,7 +49,8 @@ def _topic_required_details(candidates: list[dict]) -> list[dict]:
 async def run_prompt_check(question: str, details: dict) -> dict:
     rt = get_runtime()
     candidates = _candidate_documents(question)
-    required = _topic_required_details(candidates)
+    strong = bool(candidates) and candidates[0]["score"] >= STRONG_MATCH
+    required = _topic_required_details(candidates) if strong else []
     result = await call_json(
         "prompt_check",
         {

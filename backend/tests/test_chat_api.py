@@ -43,4 +43,37 @@ def test_events_logged(client, db):
 
     run = client.post("/api/chat/ask", json={"question": Q["green"]}).json()
     events = [e.event for e in db.query(EventLog).filter(EventLog.run_id == run["id"]).order_by(EventLog.id)]
-    assert events == ["question_asked", "prompt_checked", "ocbc_answered", "run_finished"]
+    assert events == ["question_asked", "prompt_checked", "ocbc_answered", "answer_checked", "run_finished"]
+
+
+def test_green_goes_to_employee_and_use_is_logged(client, db):
+    from app.models import EventLog
+
+    run = client.post("/api/chat/ask", json={"question": Q["green"]}).json()
+    run = client.get(f"/api/chat/runs/{run['id']}").json()
+    assert run["final_verdict"] == "Green" and run["routed_to"] == "employee"
+    assert run["original_checks"]["sentences"][0]["label"] == "Supported"
+    run = client.post(f"/api/chat/runs/{run['id']}/use").json()
+    assert run["employee_action"] == "used"
+    assert db.query(EventLog).filter(EventLog.run_id == run["id"], EventLog.event == "employee_used").count() == 1
+
+
+def test_red_goes_to_review_queue(client, db):
+    from app.models import ReviewItem
+
+    run = client.post("/api/chat/ask", json={"question": Q["red"]}).json()
+    client.post(f"/api/chat/runs/{run['id']}/details", json={"details": {"payee_type": "New"}})
+    run = client.get(f"/api/chat/runs/{run['id']}").json()
+    assert run["final_verdict"] == "Red" and run["routed_to"] == "review"
+    item = db.query(ReviewItem).filter(ReviewItem.run_id == run["id"]).one()
+    assert item.queue_reason == "red" and item.main_flag == "outdated_source"
+
+
+def test_report_problem_goes_to_review_queue(client, db):
+    from app.models import ReviewItem
+
+    run = client.post("/api/chat/ask", json={"question": Q["green"]}).json()
+    run = client.post(f"/api/chat/runs/{run['id']}/report", json={"reason": "Looks incomplete"}).json()
+    assert run["employee_action"] == "reported"
+    item = db.query(ReviewItem).filter(ReviewItem.run_id == run["id"]).one()
+    assert item.queue_reason == "reported"

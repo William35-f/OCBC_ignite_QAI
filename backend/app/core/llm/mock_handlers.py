@@ -4,11 +4,14 @@
 - ocbc_answer  : scripted answers for the demo scenarios, chosen by WHAT THE RETRIEVER RETURNED
                  (so retiring a document really changes the answer), plus a naive generic answer
 - label_claims : compares figures and keywords between each claim and its evidence passages
+- missing_exceptions : a condition applies by its "when" rule; it is mentioned if its key phrase is in the answer
+- intent_check : a part is addressed if an answer sentence is semantically close to it (local embeddings);
+                 a "what do I need to do/check" part is partly answered if an applicable condition is missing
 """
 import re
 
 from app.core.llm.mock import mock_handler
-from app.services.text import ABSENCE_RE, STOPWORDS, extract_figures, keywords
+from app.services.text import ABSENCE_RE, NO_SOURCE_RE, STOPWORDS, extract_figures, keywords, split_sentences
 
 V2024, V2026 = "payments-procedure-v2024", "payments-procedure-v2026"
 
@@ -242,13 +245,17 @@ def _label_one(claim: dict, detail_words: set[str], ignore: set[str]) -> dict:
             return result("Partly supported", "Some figures appear in the evidence, but not all of them.")
         return result("Unsupported", "The evidence is on this topic but does not state these figures.")
 
-    evidence_words = set().union(*(keywords(e["text"]) for e in evidence)) if evidence else set()
+    # No figures: how much of the sentence's wording is in the evidence?
+    # Only passages sharing at least 2 content words count as the evidence used.
+    used = [e for e in evidence if len(claim_words & keywords(e["text"])) >= 2] or evidence
+    used_ids = [e["id"] for e in used]
+    evidence_words = set().union(*(keywords(e["text"]) for e in used))
     coverage = len(claim_words & evidence_words) / max(1, len(claim_words))
     if coverage >= 0.6:
-        return result("Supported", "The evidence states this.")
+        return result("Supported", "The evidence states this.", used_ids)
     if coverage >= 0.3:
-        return result("Partly supported", "Only part of this sentence is in the evidence.")
-    return result("Unsupported", "The evidence is on this topic but does not state this.")
+        return result("Partly supported", "Only part of this sentence is in the evidence.", used_ids)
+    return result("Unsupported", "The evidence is on this topic but does not state this.", used_ids)
 
 
 @mock_handler("label_claims")
@@ -256,3 +263,57 @@ def label_claims(p: dict) -> dict:
     detail_words = keywords(" ".join(str(v) for v in (p.get("details") or {}).values()))
     ignore = set(p.get("ignore_figures") or [])
     return {"labels": [_label_one(c, detail_words, ignore) for c in p["claims"]]}
+
+
+# =============================================================================
+# Step 4B: missing exceptions
+# =============================================================================
+def _plain(text: str) -> str:
+    return re.sub(r"[\s-]+", " ", text.lower()).strip()
+
+
+@mock_handler("missing_exceptions")
+def missing_exceptions(p: dict) -> dict:
+    answer = _plain(p["answer"])
+    out = []
+    for c in p["conditions"]:
+        mentioned = bool(c["key_phrase"]) and _plain(c["key_phrase"]) in answer
+        reason = "Applies to this question." if c["applies_by_rule"] else "Does not apply to this question."
+        out.append({"id": c["id"], "applies": c["applies_by_rule"], "mentioned": mentioned, "reason": reason})
+    return {"conditions": out}
+
+
+# =============================================================================
+# Step 4C: intent check
+# =============================================================================
+PROCEDURAL_RE = re.compile(
+    r"\b(need to|have to|must i|should i|check|steps?|before processing|what do i do|how do i|documents?|requirements?)\b",
+    re.I,
+)
+ADDRESSED_MIN = 0.35  # cosine similarity between a part and its closest answer sentence
+
+
+@mock_handler("intent_check")
+def intent_check(p: dict) -> dict:
+    from app.services.knowledge_base import get_kb  # local embeddings, no LLM
+
+    parts = p["parts"]
+    sentences = [s.text for s in split_sentences(p["answer"]) if not NO_SOURCE_RE.search(s.text)]
+    answer = _plain(p["answer"])
+    out = []
+    if not sentences:
+        return {"parts": [{"part": x, "status": "not_answered", "reason": "The answer says no approved source was found."}
+                          for x in parts]}
+    vectors = get_kb().store.embed(parts + sentences)
+    for n, part in enumerate(parts):
+        sims = [sum(a * b for a, b in zip(vectors[n], vectors[len(parts) + m])) for m in range(len(sentences))]
+        if max(sims) < ADDRESSED_MIN:
+            out.append({"part": part, "status": "not_answered", "reason": "No sentence in the answer addresses it."})
+            continue
+        missing = [c["key_phrase"] for c in p.get("applicable_conditions") or []
+                   if c["key_phrase"] and _plain(c["key_phrase"]) not in answer]
+        if PROCEDURAL_RE.search(part) and missing:
+            out.append({"part": part, "status": "partly", "reason": f"It leaves out: {', '.join(missing)}."})
+        else:
+            out.append({"part": part, "status": "answered", "reason": "The answer addresses this part."})
+    return {"parts": out}

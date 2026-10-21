@@ -67,3 +67,36 @@ class AskRequest(BaseModel):
 
 class DetailsRequest(BaseModel):
     details: dict[str, str]
+
+
+# --- Step 4B: missing exceptions (LLM output) --------------------------------------
+class ExceptionItem(BaseModel):
+    id: str  # "<doc_id>:<condition id>"
+    applies: bool
+    mentioned: bool
+    reason: str = ""
+
+
+class ExceptionChecks(BaseModel):
+    conditions: list[ExceptionItem]
+
+
+# --- Step 4C: intent check (LLM output) ----------------------------------------------
+class IntentPart(BaseModel):
+    part: str
+    status: Literal["answered", "partly", "not_answered"]
+    reason: str = ""
+
+
+class IntentResult(BaseModel):
+    parts: list[IntentPart]
+
+
+# --- Flags (all checks) --------------------------------------------------------------
+class Flag(BaseModel):
+    check: Literal["A", "B", "C"]
+    type: str  # see verdict.SEVERITY
+    severity: Literal["critical", "warning", "info"]
+    message: str  # plain English, shown to the employee
+    sentence_index: int | None = None
+    doc_ids: list[str] = []
