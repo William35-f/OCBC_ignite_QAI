@@ -1,0 +1,258 @@
+"""Rule-based mock outputs for each LLM task (no API key, no internet).
+
+- prompt_check : splits the question, finds missing required details, pulls out assumptions
+- ocbc_answer  : scripted answers for the demo scenarios, chosen by WHAT THE RETRIEVER RETURNED
+                 (so retiring a document really changes the answer), plus a naive generic answer
+- label_claims : compares figures and keywords between each claim and its evidence passages
+"""
+import re
+
+from app.core.llm.mock import mock_handler
+from app.services.text import ABSENCE_RE, STOPWORDS, extract_figures, keywords
+
+V2024, V2026 = "payments-procedure-v2024", "payments-procedure-v2026"
+
+
+# =============================================================================
+# Step 2: prompt check
+# =============================================================================
+PART_SPLIT_RE = re.compile(
+    r",?\s+and\s+(?=(?:what|how|is|are|do|does|can|which|when|where|who|why|should|will)\b)|(?<=\?)\s+", re.I
+)
+# "Since <assumption>, <question>" - the comma must not be inside a number like S$10,000
+ASSUMPTION_RE = re.compile(r"^(?:since|given that|as|because|assuming)\s+(.+?),\s+(?!\d)(.+)$", re.I)
+
+
+def _tidy_question(text: str) -> str:
+    text = text.strip().strip(",").strip()
+    text = text[0].upper() + text[1:] if text else text
+    return text if text.endswith("?") else text.rstrip(".") + "?"
+
+
+def _detail_in_question(q: str, name: str, option: str) -> bool:
+    """Is this option stated in the question? e.g. 'new' near 'payee' for payee_type=New."""
+    noun = name.split("_")[0]
+    for term in (t.strip().lower() for t in option.split("/")):
+        if re.search(rf"\b{re.escape(term)}\b[\w\s-]{{0,20}}\b{re.escape(noun)}", q):
+            return True
+        if len(term) >= 7 and re.search(rf"\b{re.escape(term)}\b", q):
+            return True
+    return False
+
+
+def _search_query(body: str, details: dict) -> str:
+    words = [w for w in re.findall(r"[A-Za-z0-9$%'-]+(?:,\d{3})*", body) if w.lower() not in STOPWORDS]
+    query = " ".join(words)
+    for name, value in details.items():
+        phrase = f"{value.lower()} {name.split('_')[0]}"
+        if phrase not in query.lower():
+            query += f" {phrase}"
+    return query.strip()
+
+
+@mock_handler("prompt_check")
+def prompt_check(p: dict) -> dict:
+    question = p["question"].strip()
+    q = question.lower()
+    details = p.get("details") or {}
+    docs = p.get("candidate_documents") or []
+    top = docs[0] if docs else None
+    required = p.get("required_details") or []
+
+    # Assumptions: "Since the limit is S$10,000, can I ...?"
+    assumptions, body = [], question
+    if m := ASSUMPTION_RE.match(question):
+        clause, body = m.group(1).strip(), m.group(2).strip()
+        claim = clause[0].upper() + clause[1:]
+        if re.search(r"\bnew payee", q) and "payee" not in clause.lower():
+            claim += " for a new payee"
+        assumptions.append(claim.rstrip(".") + ".")
+
+    parts = [_tidy_question(x) for x in PART_SPLIT_RE.split(body) if x and x.strip()]
+
+    known, missing = {}, []
+    for rd in required:
+        for opt in rd.get("options", []):
+            if _detail_in_question(q, rd["name"], opt):
+                known[rd["name"]] = opt
+        if rd["name"] in details or rd["name"] in known:
+            continue
+        if any(term in q for term in rd.get("needed_when", [])):
+            missing.append({"name": rd["name"], "question": rd["question"], "options": rd["options"]})
+
+    return {
+        "parts": parts or [_tidy_question(question)],
+        "topic": top["topic"] if top else "general",
+        "missing_details": missing[: int(p.get("max_followups", 2))],
+        "assumptions": assumptions,
+        "search_query": _search_query(body, {**details, **known}),
+        "known_details": known,
+    }
+
+
+# =============================================================================
+# Step 3: OCBC AI answer
+# =============================================================================
+def _has(passages: list[dict], doc_id: str, section: str | None = None) -> bool:
+    return any(x["doc_id"] == doc_id and (section is None or x["section"] == section) for x in passages)
+
+
+def _money_to_int(text: str) -> int:
+    return int(re.sub(r"[^\d]", "", text))
+
+
+@mock_handler("ocbc_answer")
+def ocbc_answer(p: dict) -> str:
+    q = p["question"].lower()
+    passages = p.get("passages") or []
+    details = {k: str(v).lower() for k, v in (p.get("details") or {}).items()}
+    new_payee = details.get("payee_type") == "new"
+
+    # Scenario 5: nothing in the knowledge base covers crypto
+    if re.search(r"crypto|bitcoin|digital token", q):
+        return "Cryptocurrency transfers to a customer's wallet usually complete within an hour."
+
+    # Scenario 1 (Mr Tan): limit + what to check before processing
+    if "limit" in q and re.search(r"check|before processing|verify", q):
+        if _has(passages, V2024, "3.1"):  # the retriever returned the superseded procedure first
+            return (
+                "The daily overseas transfer limit is S$10,000. Verify the customer's ID and process the "
+                "transfer. (Payments Procedure v2024, §3.1)"
+            )
+        if _has(passages, V2026):
+            if new_payee:
+                return (
+                    "For a new overseas payee, the daily limit is S$5,000. Verify the customer's ID and complete "
+                    "the scam-risk check before processing. (Payments Procedure v2026, §3.1, §4.1, §4.2)"
+                )
+            return (
+                "For an existing payee, the daily overseas transfer limit is S$10,000. Verify the customer's ID "
+                "before processing. (Payments Procedure v2026, §3.1, §4.1)"
+            )
+
+    # Scenario 4: "Since the limit is S$10,000, can I send S$8,000 to a new payee?"
+    amounts = re.findall(r"s\$\s?[\d,]+", q)
+    if amounts and "payee" in q and re.search(r"\bsend|transfer", q):
+        amount = amounts[-1].upper().replace(" ", "")
+        if _has(passages, V2024, "3.1"):
+            ok = _money_to_int(amount) <= 10000
+            verb = "within" if ok else "above"
+            return (
+                f"{'Yes' if ok else 'No'}. The daily overseas transfer limit is S$10,000, so {amount} is {verb} "
+                "the limit. (Payments Procedure v2024, §3.1)"
+            )
+        if _has(passages, V2026):
+            limit = 5000 if new_payee else 10000
+            ok = _money_to_int(amount) <= limit
+            who = "New payees are" if new_payee else "Existing payees are"
+            text = (
+                f"{'Yes' if ok else 'No'}. {who} limited to S${limit:,} per day, so {amount} is "
+                f"{'within' if ok else 'above'} the limit."
+            )
+            if new_payee:
+                text += " A scam-risk check is required before processing any transfer to a first-time overseas payee."
+                return text + " (Payments Procedure v2026, §3.1, §4.2)"
+            return text + " (Payments Procedure v2026, §3.1)"
+
+    # Scenario 2 (Amber): arrival time + fee. No document states an arrival time.
+    if re.search(r"how long|arrive|take", q) and "fee" in q and _has(passages, V2026, "5"):
+        return (
+            "Transfers usually arrive within 1 business day. There is no fee for transfers below S$1,000. "
+            "(Payments Procedure v2026, §5)"
+        )
+
+    return _generic_answer(p)
+
+
+def _generic_answer(p: dict) -> str:
+    """A naive RAG answer: for each question part, quote the best matching passage."""
+    all_passages = p.get("passages") or []
+    doc_rank = {}
+    for x in all_passages:  # rank documents by their best hit
+        doc_rank.setdefault(x["doc_id"], len(doc_rank))
+    passages = [x for x in all_passages if x["kind"] == "section" and x["heading"].lower() != "purpose"]
+    if not passages or max(x["score"] for x in passages) < 0.35:
+        return "No approved source was found for this question in the procedures I can search."
+    sentences, used = [], set()
+    for part in p.get("parts") or [p["question"]]:
+        pk = keywords(part)
+        best = max(
+            passages,
+            key=lambda x: (len(pk & keywords(f"{x['heading']} {x['text']}")), -doc_rank[x["doc_id"]], x["score"]),
+        )
+        key = (best["doc_id"], best["section"])
+        if key in used:
+            continue
+        used.add(key)
+        text = best["text"].rstrip(".")
+        sentences.append(f"{text}. ({best['label']}, §{best['section']})")
+    return " ".join(sentences)
+
+
+# =============================================================================
+# Step 4B: claim labelling
+# =============================================================================
+def _clauses(text: str) -> list[str]:
+    """'Limit: A; B' -> ['Limit: A', 'Limit: B'] so each clause keeps its subject."""
+    head, sep, rest = text.partition(":")
+    if sep and ";" in rest and len(head) < 60:
+        return [f"{head.strip()}: {r.strip().rstrip('.')}" for r in rest.split(";") if r.strip()]
+    return [s.strip() for s in re.split(r";|(?<=\.)\s+", text) if s.strip()]
+
+
+def _label_one(claim: dict, detail_words: set[str], ignore: set[str]) -> dict:
+    text, evidence = claim["text"], claim["evidence"]
+    all_ids = [e["id"] for e in evidence]
+
+    def result(label: str, reason: str, ids=None, correction=None) -> dict:
+        return {"id": claim["id"], "label": label, "evidence_ids": ids or all_ids, "reason": reason, "correction": correction}
+
+    if ABSENCE_RE.search(text):
+        return result("Supported", "None of the current passages states this, which matches the claim.")
+
+    claim_words = keywords(text)
+    figures = [f for f in extract_figures(text) if f[1] not in ignore]
+    fig_values = {v for _, v in figures}
+    match_words = {w for w in claim_words if not extract_figures(w)} | detail_words
+
+    # Pick the evidence clause that best matches the claim's wording (not its figures)
+    clauses = [(e, c) for e in evidence for c in _clauses(e["text"])]
+    best_e, best_c = max(clauses, key=lambda ec: len(match_words & keywords(ec[1])))
+
+    if figures:
+        best_figs = {v for _, v in extract_figures(best_c)}
+        if fig_values <= best_figs:
+            return result("Supported", f"The figures match {best_e['doc_label']} {best_e['section_label']}.", [best_e["id"]])
+        kinds = {k for k, _ in figures}
+        same_kind = {v for k, v in extract_figures(best_c) if k in kinds}
+        if same_kind and not (fig_values & best_figs):
+            tail = best_c.split(":", 1)[-1].strip()
+            note = (
+                f"Note: {best_e['doc_label']} {best_e['section_label']} says {tail}, "
+                f"not {', '.join(sorted(v.upper() for v in fig_values))}."
+            )
+            return result(
+                "Contradicted",
+                f"{best_e['doc_label']} {best_e['section_label']} states a different figure for this case.",
+                [best_e["id"]],
+                note,
+            )
+        all_figs = {v for e in evidence for _, v in extract_figures(e["text"])}
+        if fig_values & all_figs:
+            return result("Partly supported", "Some figures appear in the evidence, but not all of them.")
+        return result("Unsupported", "The evidence is on this topic but does not state these figures.")
+
+    evidence_words = set().union(*(keywords(e["text"]) for e in evidence)) if evidence else set()
+    coverage = len(claim_words & evidence_words) / max(1, len(claim_words))
+    if coverage >= 0.6:
+        return result("Supported", "The evidence states this.")
+    if coverage >= 0.3:
+        return result("Partly supported", "Only part of this sentence is in the evidence.")
+    return result("Unsupported", "The evidence is on this topic but does not state this.")
+
+
+@mock_handler("label_claims")
+def label_claims(p: dict) -> dict:
+    detail_words = keywords(" ".join(str(v) for v in (p.get("details") or {}).values()))
+    ignore = set(p.get("ignore_figures") or [])
+    return {"labels": [_label_one(c, detail_words, ignore) for c in p["claims"]]}

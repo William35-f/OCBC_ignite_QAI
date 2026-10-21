@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import { Placeholder } from "./components/ui";
+import Chat from "./pages/Chat";
 import KnowledgeBase from "./pages/KnowledgeBase";
 import Settings from "./pages/Settings";
 import { USERS, useRole } from "./roles";
@@ -15,7 +16,7 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Home />} />
-        <Route path="chat" element={<Placeholder title="Ask OCBC AI" phase={2} />} />
+        <Route path="chat" element={<Chat />} />
         <Route path="review" element={<Placeholder title="Review queue" phase={5} />} />
         <Route path="admin" element={<Placeholder title="Dashboard" phase={6} />} />
         <Route path="kb" element={<KnowledgeBase />} />

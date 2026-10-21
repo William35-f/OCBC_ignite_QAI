@@ -22,8 +22,10 @@ class Settings(BaseSettings):
 
     # Retrieval
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
-    similarity_threshold: float = 0.45
+    similarity_threshold: float = 0.40
     max_followups: int = 2
+    # Short pause between workflow steps so the "Checking..." labels are visible in demos (0 in tests)
+    step_delay_seconds: float = 0.5
 
     # LLM provider: "mock" (default, offline) or "openai"
     llm_provider: str = "mock"

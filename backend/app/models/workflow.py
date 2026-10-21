@@ -36,6 +36,7 @@ class Run(Base):
 
     # Step 3-5: original answer and its checks
     original_answer: Mapped[str | None] = mapped_column(Text, nullable=True)
+    original_context: Mapped[list | None] = mapped_column(JSON, nullable=True)  # passages OCBC AI was given
     original_checks: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     original_verdict: Mapped[str | None] = mapped_column(String, nullable=True)
 
@@ -43,6 +44,7 @@ class Run(Base):
     retried: Mapped[bool] = mapped_column(Boolean, default=False)
     retry_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
     retry_answer: Mapped[str | None] = mapped_column(Text, nullable=True)
+    retry_context: Mapped[list | None] = mapped_column(JSON, nullable=True)
     retry_checks: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     retry_verdict: Mapped[str | None] = mapped_column(String, nullable=True)
 

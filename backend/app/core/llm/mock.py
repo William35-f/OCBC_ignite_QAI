@@ -39,3 +39,7 @@ class MockProvider(LLMProvider):
 @mock_handler("ping")
 def _ping(payload: dict) -> dict:
     return {"ok": True, "provider": "mock"}
+
+
+# Register the rule-based handlers for the workflow tasks
+from app.core.llm import mock_handlers  # noqa: E402,F401

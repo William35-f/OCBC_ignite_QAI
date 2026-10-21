@@ -38,5 +38,5 @@ def test_settings_roundtrip(client):
     out = client.put("/api/settings", json={"similarity_threshold": 0.5}).json()
     assert out["similarity_threshold"] == 0.5
     assert client.put("/api/settings", json={"llm_provider": "banana"}).status_code == 400
-    client.put("/api/settings", json={"similarity_threshold": 0.45})
+    client.put("/api/settings", json={"similarity_threshold": 0.40})
     assert client.post("/api/settings/test").json()["ok"] is True
