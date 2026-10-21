@@ -4,6 +4,7 @@
   "description": "Q AI by Quadrant - prototype for OCBC Ignite (synthetic data only, not an OCBC product)",
   "scripts": {
     "setup": "node scripts/setup.mjs",
+    "reset": "node scripts/reset.mjs",
     "dev": "concurrently -n api,web -c red,blue \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "node scripts/run-backend.mjs -m uvicorn app.main:app --port 8000",
     "dev:api:reload": "node scripts/run-backend.mjs -m uvicorn app.main:app --reload --reload-dir app --port 8000",

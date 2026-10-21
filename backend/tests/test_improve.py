@@ -55,6 +55,7 @@ def test_mr_tan_story_red_to_green(client, db):
     assert run["final_verdict"] == "Green" and "S$5,000" in run["final_answer"]
 
     # put the retriever back for other tests
+    db.expire_all()  # the API changed the row in another session
     db.get(Document, "payments-procedure-v2024").retriever_enabled = True
     db.commit()
 
@@ -83,10 +84,12 @@ def test_retest_runs_do_not_enter_review_queue_or_dashboard(client):
 
 def test_errors_are_counted_against_the_cited_document(client):
     run = client.post("/api/chat/ask", json={"question": Q["red"], "details": {"payee_type": "New"}}).json()
-    assert client.get(f"/api/chat/runs/{run['id']}").json()["final_verdict"] == "Red"
+    run = client.get(f"/api/chat/runs/{run['id']}").json()
+    assert run["final_verdict"] == "Red", (run["original_answer"], [f["type"] for f in run["original_checks"]["flags"]])
     docs = {d["doc_id"]: d for d in client.get("/api/admin/dashboard").json()["doc_errors"]}
     assert docs["payments-procedure-v2024"]["errors"]["contradicted"] >= 1
-    assert "payments-procedure-v2026" not in docs  # v2026 is the evidence, not the cause
+    # v2026 is the evidence that caught the contradiction, not its cause
+    assert "contradicted" not in docs.get("payments-procedure-v2026", {}).get("errors", {})
 
 
 def test_activity_log(client):

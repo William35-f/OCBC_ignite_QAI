@@ -125,7 +125,7 @@ def _print(results: dict) -> None:
     print(f"  Missed errors    : {m['count']} of {m['of']} bad answers came out Green {m['ids'] or ''}")
     print(f"  False flags      : {f['count']} of {f['of']} correct answers were flagged {f['ids'] or ''}")
     pc = results["per_check_accuracy"]
-    print(f"  Accuracy per check: A {pc['A']:.0%} · B {pc['B']:.0%} · C {pc['C']:.0%}")
+    print(f"  Accuracy per check: A {pc['A']:.0%} | B {pc['B']:.0%} | C {pc['C']:.0%}")
     print(f"  Expected flags found: {results['flag_recall']:.0%}")
     rt = results["retry"]
     print(f"  Amber fixed by one retry: {rt['fixed']} of {rt['amber_first']}")

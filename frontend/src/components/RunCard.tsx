@@ -24,7 +24,16 @@ export default function RunCard({ initial }: { initial: Run }) {
 
   // Refresh once on mount (the thread is restored from session storage)
   useEffect(() => {
-    api.get<Run>(`/api/chat/runs/${initial.id}`).then(setRun).catch(() => {});
+    api
+      .get<Run>(`/api/chat/runs/${initial.id}`)
+      .then(setRun)
+      .catch((e) =>
+        setError(
+          e.message === "Run not found"
+            ? "This question is no longer on record (the demo was reset). Use “Clear chat”."
+            : e.message,
+        ),
+      );
   }, [initial.id]);
 
   // Poll while OCBC AI and Q AI are working, then slowly while a reviewer has it

@@ -1,14 +1,16 @@
 """Q AI backend (FastAPI).
 
-Start with:  python -m uvicorn app.main:app --reload --reload-dir app
+Start with:  python -m uvicorn app.main:app --port 8000   (or `npm run dev` from the project root)
 """
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.core.db import SessionLocal, init_db
+from app.core.llm import LLMOutputError
 from app.routers import admin, chat, kb, review, settings as settings_router, trust
 from app.services.knowledge_base import get_kb, sync_to_db
 
@@ -41,6 +43,20 @@ app.include_router(kb.router)
 app.include_router(review.router)
 app.include_router(settings_router.router)
 app.include_router(trust.router)
+
+
+@app.exception_handler(LLMOutputError)
+async def llm_output_error(request: Request, exc: LLMOutputError):
+    log.warning("LLM output error on %s: %s", request.url.path, exc)
+    return JSONResponse(status_code=502, content={
+        "detail": "The language model returned invalid JSON twice. Try again, or switch to the mock provider "
+                  "on the Settings page."})
+
+
+@app.exception_handler(Exception)
+async def unexpected_error(request: Request, exc: Exception):
+    log.exception("Unexpected error on %s", request.url.path)
+    return JSONResponse(status_code=500, content={"detail": f"Unexpected server error: {str(exc)[:200]}"})
 
 
 @app.get("/api/health")
