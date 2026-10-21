@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+backend/storage/
+
+# Node
+node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+# Env files (keep the .example ones)
+.env
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
