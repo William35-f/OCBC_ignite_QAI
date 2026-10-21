@@ -46,13 +46,3 @@ export function EmptyState({ title, children }: { title: string; children?: Reac
   );
 }
 
-export function Placeholder({ title, phase }: { title: string; phase: number }) {
-  return (
-    <div>
-      <h1 className="page-title">{title}</h1>
-      <div className="mt-6">
-        <EmptyState title="Coming soon">This page is built in phase {phase}.</EmptyState>
-      </div>
-    </div>
-  );
-}

@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.db import SessionLocal, init_db
-from app.routers import admin, chat, kb, review, settings as settings_router
+from app.routers import admin, chat, kb, review, settings as settings_router, trust
 from app.services.knowledge_base import get_kb, sync_to_db
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
@@ -40,6 +40,7 @@ app.include_router(chat.router)
 app.include_router(kb.router)
 app.include_router(review.router)
 app.include_router(settings_router.router)
+app.include_router(trust.router)
 
 
 @app.get("/api/health")

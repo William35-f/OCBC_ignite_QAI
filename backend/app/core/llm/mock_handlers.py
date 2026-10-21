@@ -233,10 +233,14 @@ def _clauses(text: str) -> list[str]:
     head, sep, rest = text.partition(":")
     if sep and ";" in rest and len(head) < 60:
         return [f"{head.strip()}: {r.strip().rstrip('.')}" for r in rest.split(";") if r.strip()]
-    return [s.strip() for s in re.split(r";|(?<=\.)\s+", text) if s.strip()]
+    # Split on ";" and on sentence ends, but not inside "p.a." / "e.g." / "i.e."
+    protected = re.sub(r"\b(p\.a|e\.g|i\.e)\.", lambda m: m.group(0).replace(".", "<dot>"), text)
+    return [s.replace("<dot>", ".").strip() for s in re.split(r";|(?<=\.)\s+", protected) if s.strip()]
 
 
 LABEL_RANK = {"Supported": 0, "Partly supported": 1, "Unsupported": 2, "Contradicted": 3}
+SAME_SUBJECT_MIN = 3
+NEGATIONS = {"no", "not", "never", "cannot", "can't", "won't", "isn't", "aren't", "don't", "doesn't"}
 
 
 def _label_one(claim: dict, detail_words: set[str], ignore: set[str]) -> dict:
@@ -275,7 +279,10 @@ def _label_one(claim: dict, detail_words: set[str], ignore: set[str]) -> dict:
             return result("Supported", f"The figures match {best_e['doc_label']} {best_e['section_label']}.", [best_e["id"]])
         kinds = {k for k, _ in figures}
         same_kind = {v for k, v in extract_figures(best_c) if k in kinds}
-        if same_kind and not (fig_values & best_figs):
+        # A different figure only contradicts the claim if the clause is about the same
+        # thing: at least 3 shared content words (an ATM limit is not a transfer limit)
+        same_subject = len((claim_words - {v for _, v in figures}) & keywords(best_c)) >= SAME_SUBJECT_MIN
+        if same_kind and same_subject and not (fig_values & best_figs):
             tail = best_c.split(":", 1)[-1].strip()
             note = (
                 f"Note: {best_e['doc_label']} {best_e['section_label']} says {tail}, "
@@ -298,6 +305,19 @@ def _label_one(claim: dict, detail_words: set[str], ignore: set[str]) -> dict:
     used_ids = [e["id"] for e in used]
     evidence_words = set().union(*(keywords(e["text"]) for e in used))
     coverage = len(claim_words & evidence_words) / max(1, len(claim_words))
+
+    # Polarity: same wording, but one side says "no" / "not" ("No interest is paid"
+    # vs "Interest of 0.05% p.a. is paid") -> the evidence says the opposite
+    closest = max(used, key=lambda e: len(claim_words & keywords(e["text"])))
+    overlap = len((claim_words - NEGATIONS) & keywords(closest["text"])) / max(1, len(claim_words - NEGATIONS))
+    if overlap >= 0.5 and bool(claim_words & NEGATIONS) != bool(keywords(closest["text"]) & NEGATIONS):
+        return result(
+            "Contradicted",
+            f"{closest['doc_label']} {closest['section_label']} says the opposite.",
+            [closest["id"]],
+            f"Note: {closest['doc_label']} {closest['section_label']} says: “{closest['text']}”",
+        )
+
     if coverage >= 0.6:
         return result("Supported", "The evidence states this.", used_ids)
     if coverage >= 0.3:

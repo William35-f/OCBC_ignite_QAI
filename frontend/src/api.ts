@@ -285,3 +285,50 @@ export interface ActivityRow {
   question: string | null;
   data: Record<string, unknown>;
 }
+
+// ---- Eval and Trust Challenge ----------------------------------------------
+
+export interface EvalResults {
+  run_at: string;
+  provider: string;
+  cases: number;
+  verdict_accuracy: number;
+  missed_errors: { count: number; of: number; ids: string[] };
+  false_flags: { count: number; of: number; ids: string[] };
+  per_check_accuracy: { A: number; B: number; C: number };
+  flag_recall: number | null;
+  by_type: Record<string, { cases: number; verdict_ok: number }>;
+  retry: { amber_first: number; fixed: number; rate: number | null };
+  rows: {
+    id: string;
+    type: string;
+    question: string;
+    expected_verdict: string;
+    got_verdict: string;
+    verdict_ok: boolean;
+    expected_flags: string[];
+    got_flags: string[];
+    missing_flags: string[];
+    per_check: { A: boolean; B: boolean; C: boolean };
+  }[];
+}
+
+export interface TrustItem {
+  id: string;
+  question: string;
+  answer: string;
+  checks: Checks;
+}
+
+export interface RoundScore {
+  answers: number;
+  correct: number;
+  accuracy: number | null;
+}
+
+export interface TrustSummary {
+  participants: number;
+  completed: number;
+  A: RoundScore;
+  B: RoundScore;
+}

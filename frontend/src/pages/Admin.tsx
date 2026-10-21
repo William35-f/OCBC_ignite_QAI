@@ -1,7 +1,16 @@
 // Admin dashboard (Step 8): what is going wrong, why, and the fixes - verified by a retest.
 import { useCallback, useEffect, useState } from "react";
-import { api, type ActivityRow, type Dashboard, type RetestResult, type Suggestion } from "../api";
+import {
+  api,
+  type ActivityRow,
+  type Dashboard,
+  type EvalResults,
+  type RetestResult,
+  type Suggestion,
+  type TrustSummary,
+} from "../api";
 import { BarList, ChartCard, SimpleTable, StatTile, VerdictChart } from "../components/charts";
+import { EvalPanel, TrustPanel } from "../components/EvalPanels";
 import { FLAG_NAMES } from "../components/labels";
 import { Badge, EmptyState, ErrorNote, Spinner } from "../components/ui";
 import { colors } from "../theme";
@@ -17,21 +26,27 @@ export default function Admin() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [retest, setRetest] = useState<RetestResult | null>(null);
   const [activity, setActivity] = useState<ActivityRow[]>([]);
+  const [evalResults, setEvalResults] = useState<EvalResults | null>(null);
+  const [trustSummary, setTrustSummary] = useState<TrustSummary | null>(null);
   const [busy, setBusy] = useState<string>("");
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {
     try {
-      const [d, s, r, a] = await Promise.all([
+      const [d, s, r, a, ev, tr] = await Promise.all([
         api.get<Dashboard>("/api/admin/dashboard"),
         api.get<Suggestion[]>("/api/admin/suggestions"),
         api.get<RetestResult | null>("/api/admin/retest/latest"),
         api.get<ActivityRow[]>("/api/admin/activity"),
+        api.get<EvalResults | null>("/api/admin/eval"),
+        api.get<TrustSummary>("/api/trust/summary"),
       ]);
       setDash(d);
       setSuggestions(s);
       setRetest(r);
       setActivity(a);
+      setEvalResults(ev);
+      setTrustSummary(tr);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -248,7 +263,9 @@ export default function Admin() {
         )}
       </section>
 
-      <div id="eval-slot" />
+      {/* Proof it works */}
+      <EvalPanel initial={evalResults} />
+      <TrustPanel summary={trustSummary} />
 
       {/* Audit log */}
       <section className="card space-y-3">

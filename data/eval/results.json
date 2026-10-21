@@ -1,0 +1,891 @@
+{
+  "run_at": "2026-10-22T02:25:30",
+  "provider": "mock",
+  "cases": 40,
+  "verdict_accuracy": 1.0,
+  "missed_errors": {
+    "count": 0,
+    "of": 30,
+    "ids": []
+  },
+  "false_flags": {
+    "count": 0,
+    "of": 10,
+    "ids": []
+  },
+  "per_check_accuracy": {
+    "A": 1.0,
+    "B": 1.0,
+    "C": 0.925
+  },
+  "flag_recall": 0.836,
+  "by_type": {
+    "correct": {
+      "cases": 10,
+      "verdict_ok": 10
+    },
+    "missing_exception": {
+      "cases": 10,
+      "verdict_ok": 10
+    },
+    "outdated_source": {
+      "cases": 10,
+      "verdict_ok": 10
+    },
+    "no_evidence": {
+      "cases": 10,
+      "verdict_ok": 10
+    }
+  },
+  "retry": {
+    "amber_first": 3,
+    "fixed": 1,
+    "rate": 0.333,
+    "rows": [
+      {
+        "question": "How long does an overseas transfer take, and is there a fee?",
+        "retry_verdict": "Green",
+        "fixed": true
+      },
+      {
+        "question": "Can I process a cryptocurrency transfer to a customer's crypto wallet?",
+        "retry_verdict": "Amber",
+        "fixed": false
+      },
+      {
+        "question": "What is the bank's policy on mortgage refinancing?",
+        "retry_verdict": "Amber",
+        "fixed": false
+      }
+    ]
+  },
+  "rows": [
+    {
+      "id": "C01",
+      "type": "correct",
+      "question": "What documents does a customer need to change their mailing address?",
+      "expected_verdict": "Green",
+      "got_verdict": "Green",
+      "verdict_ok": true,
+      "expected_flags": [],
+      "got_flags": [],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "C02",
+      "type": "correct",
+      "question": "How much is the card replacement fee?",
+      "expected_verdict": "Green",
+      "got_verdict": "Green",
+      "verdict_ok": true,
+      "expected_flags": [],
+      "got_flags": [],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "C03",
+      "type": "correct",
+      "question": "What is the minimum initial deposit for a savings account?",
+      "expected_verdict": "Green",
+      "got_verdict": "Green",
+      "verdict_ok": true,
+      "expected_flags": [],
+      "got_flags": [],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "C04",
+      "type": "correct",
+      "question": "When does an account become dormant?",
+      "expected_verdict": "Green",
+      "got_verdict": "Green",
+      "verdict_ok": true,
+      "expected_flags": [],
+      "got_flags": [],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "C05",
+      "type": "correct",
+      "question": "How many notes can a cash deposit machine accept?",
+      "expected_verdict": "Green",
+      "got_verdict": "Green",
+      "verdict_ok": true,
+      "expected_flags": [],
+      "got_flags": [],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "C06",
+      "type": "correct",
+      "question": "Is there a fee for an overseas transfer of S$800?",
+      "expected_verdict": "Green",
+      "got_verdict": "Green",
+      "verdict_ok": true,
+      "expected_flags": [],
+      "got_flags": [],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "C07",
+      "type": "correct",
+      "question": "How much interest is paid if a fixed deposit is withdrawn early?",
+      "expected_verdict": "Green",
+      "got_verdict": "Green",
+      "verdict_ok": true,
+      "expected_flags": [],
+      "got_flags": [],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "C08",
+      "type": "correct",
+      "question": "What's the daily overseas transfer limit, and what do I need to check before processing?",
+      "expected_verdict": "Green",
+      "got_verdict": "Green",
+      "verdict_ok": true,
+      "expected_flags": [],
+      "got_flags": [],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "C09",
+      "type": "correct",
+      "question": "What should I do if a customer's debit card is stolen?",
+      "expected_verdict": "Green",
+      "got_verdict": "Green",
+      "verdict_ok": true,
+      "expected_flags": [],
+      "got_flags": [],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "C10",
+      "type": "correct",
+      "question": "Do large cash deposits need any extra paperwork?",
+      "expected_verdict": "Green",
+      "got_verdict": "Green",
+      "verdict_ok": true,
+      "expected_flags": [],
+      "got_flags": [],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "M01",
+      "type": "missing_exception",
+      "question": "What should I do if a customer's debit card is stolen?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "missing_exception",
+        "part_partly_answered"
+      ],
+      "got_flags": [
+        "missing_exception",
+        "part_partly_answered"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "M02",
+      "type": "missing_exception",
+      "question": "Is there a fee to replace a card that was damaged by a manufacturing fault?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "missing_exception"
+      ],
+      "got_flags": [
+        "missing_exception"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "M03",
+      "type": "missing_exception",
+      "question": "What's the daily overseas transfer limit, and what do I need to check before processing?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "missing_exception",
+        "part_partly_answered"
+      ],
+      "got_flags": [
+        "missing_exception",
+        "part_partly_answered"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "M04",
+      "type": "missing_exception",
+      "question": "The family of a deceased customer wants to withdraw the fixed deposit early. How much interest is paid?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "missing_exception"
+      ],
+      "got_flags": [
+        "missing_exception"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "M05",
+      "type": "missing_exception",
+      "question": "Can a customer make a partial withdrawal from a fixed deposit?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "missing_exception"
+      ],
+      "got_flags": [
+        "missing_exception"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "M06",
+      "type": "missing_exception",
+      "question": "How do I reactivate a dormant joint account?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "missing_exception",
+        "part_partly_answered"
+      ],
+      "got_flags": [
+        "missing_exception",
+        "part_partly_answered"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "M07",
+      "type": "missing_exception",
+      "question": "What documents does a customer need to change to an overseas mailing address?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "missing_exception",
+        "part_partly_answered"
+      ],
+      "got_flags": [
+        "missing_exception",
+        "part_partly_answered"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "M08",
+      "type": "missing_exception",
+      "question": "Can a child under 16 open a savings account on their own?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "missing_exception",
+        "part_partly_answered"
+      ],
+      "got_flags": [
+        "missing_exception"
+      ],
+      "missing_flags": [
+        "part_partly_answered"
+      ],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": false
+      }
+    },
+    {
+      "id": "M09",
+      "type": "missing_exception",
+      "question": "A customer wants to deposit S$5,000 in cash on behalf of someone else. Are extra checks needed?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "missing_exception",
+        "part_partly_answered"
+      ],
+      "got_flags": [
+        "missing_exception"
+      ],
+      "missing_flags": [
+        "part_partly_answered"
+      ],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": false
+      }
+    },
+    {
+      "id": "M10",
+      "type": "missing_exception",
+      "question": "Can I send an overseas transfer to a sanctioned country for an existing payee?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "missing_exception",
+        "part_partly_answered"
+      ],
+      "got_flags": [
+        "missing_exception"
+      ],
+      "missing_flags": [
+        "part_partly_answered"
+      ],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": false
+      }
+    },
+    {
+      "id": "O01",
+      "type": "outdated_source",
+      "question": "What's the daily overseas transfer limit, and what do I need to check before processing?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "outdated_source",
+        "contradicted",
+        "missing_exception",
+        "part_partly_answered"
+      ],
+      "got_flags": [
+        "contradicted",
+        "missing_exception",
+        "outdated_source",
+        "part_partly_answered"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "O02",
+      "type": "outdated_source",
+      "question": "What is the daily overseas transfer limit for an existing payee?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "outdated_source"
+      ],
+      "got_flags": [
+        "outdated_source"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "O03",
+      "type": "outdated_source",
+      "question": "What must I check before processing an overseas transfer?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "outdated_source"
+      ],
+      "got_flags": [
+        "outdated_source"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "O04",
+      "type": "outdated_source",
+      "question": "How much interest is paid if a fixed deposit is withdrawn early?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "outdated_source",
+        "contradicted"
+      ],
+      "got_flags": [
+        "contradicted",
+        "outdated_source"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "O05",
+      "type": "outdated_source",
+      "question": "Can a customer withdraw part of a fixed deposit?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "outdated_source",
+        "contradicted"
+      ],
+      "got_flags": [
+        "contradicted",
+        "outdated_source"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "O06",
+      "type": "outdated_source",
+      "question": "What does the payments procedure cover?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "outdated_source"
+      ],
+      "got_flags": [
+        "outdated_source"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "O07",
+      "type": "outdated_source",
+      "question": "Which accounts can overseas transfers be sent from?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "outdated_source"
+      ],
+      "got_flags": [
+        "outdated_source"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "O08",
+      "type": "outdated_source",
+      "question": "Can I send S$8,000 to a new payee?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "outdated_source",
+        "contradicted",
+        "missing_exception"
+      ],
+      "got_flags": [
+        "contradicted",
+        "missing_exception",
+        "outdated_source"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "O09",
+      "type": "outdated_source",
+      "question": "What should I do with a deceased customer's fixed deposit?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "outdated_source"
+      ],
+      "got_flags": [
+        "outdated_source"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "O10",
+      "type": "outdated_source",
+      "question": "What is the overseas transfer limit for a first-time payee?",
+      "expected_verdict": "Red",
+      "got_verdict": "Red",
+      "verdict_ok": true,
+      "expected_flags": [
+        "outdated_source",
+        "contradicted"
+      ],
+      "got_flags": [
+        "contradicted",
+        "missing_exception",
+        "outdated_source"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "N01",
+      "type": "no_evidence",
+      "question": "Can I process a cryptocurrency transfer to a customer's crypto wallet?",
+      "expected_verdict": "Amber",
+      "got_verdict": "Amber",
+      "verdict_ok": true,
+      "expected_flags": [
+        "unable_to_verify",
+        "no_citation"
+      ],
+      "got_flags": [
+        "no_citation",
+        "unable_to_verify"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "N02",
+      "type": "no_evidence",
+      "question": "What is the maximum loan-to-value for a mortgage refinancing?",
+      "expected_verdict": "Amber",
+      "got_verdict": "Amber",
+      "verdict_ok": true,
+      "expected_flags": [
+        "unable_to_verify",
+        "no_citation"
+      ],
+      "got_flags": [
+        "no_citation",
+        "unable_to_verify"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "N03",
+      "type": "no_evidence",
+      "question": "Can branch staff sell travel insurance?",
+      "expected_verdict": "Amber",
+      "got_verdict": "Amber",
+      "verdict_ok": true,
+      "expected_flags": [
+        "unable_to_verify",
+        "no_citation"
+      ],
+      "got_flags": [
+        "no_citation",
+        "unsupported"
+      ],
+      "missing_flags": [
+        "unable_to_verify"
+      ],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "N04",
+      "type": "no_evidence",
+      "question": "How does a customer open a share trading account?",
+      "expected_verdict": "Amber",
+      "got_verdict": "Amber",
+      "verdict_ok": true,
+      "expected_flags": [
+        "unable_to_verify",
+        "no_citation"
+      ],
+      "got_flags": [
+        "no_citation",
+        "unsupported"
+      ],
+      "missing_flags": [
+        "unable_to_verify"
+      ],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "N05",
+      "type": "no_evidence",
+      "question": "What exchange rate do we use for walk-in currency exchange?",
+      "expected_verdict": "Amber",
+      "got_verdict": "Amber",
+      "verdict_ok": true,
+      "expected_flags": [
+        "unable_to_verify",
+        "no_citation"
+      ],
+      "got_flags": [
+        "no_citation",
+        "unable_to_verify"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "N06",
+      "type": "no_evidence",
+      "question": "How much does a safe deposit box cost per year?",
+      "expected_verdict": "Amber",
+      "got_verdict": "Amber",
+      "verdict_ok": true,
+      "expected_flags": [
+        "unable_to_verify",
+        "figure_mismatch"
+      ],
+      "got_flags": [
+        "conflict_older_source",
+        "figure_mismatch",
+        "unsupported"
+      ],
+      "missing_flags": [
+        "unable_to_verify"
+      ],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "N07",
+      "type": "no_evidence",
+      "question": "How many reward points does the travel credit card earn?",
+      "expected_verdict": "Amber",
+      "got_verdict": "Amber",
+      "verdict_ok": true,
+      "expected_flags": [
+        "unable_to_verify",
+        "no_citation"
+      ],
+      "got_flags": [
+        "no_citation",
+        "unsupported"
+      ],
+      "missing_flags": [
+        "unable_to_verify"
+      ],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "N08",
+      "type": "no_evidence",
+      "question": "How long does a cheque take to clear?",
+      "expected_verdict": "Amber",
+      "got_verdict": "Amber",
+      "verdict_ok": true,
+      "expected_flags": [
+        "unable_to_verify",
+        "no_citation"
+      ],
+      "got_flags": [
+        "no_citation",
+        "unable_to_verify"
+      ],
+      "missing_flags": [],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "N09",
+      "type": "no_evidence",
+      "question": "What is the daily ATM withdrawal limit?",
+      "expected_verdict": "Amber",
+      "got_verdict": "Amber",
+      "verdict_ok": true,
+      "expected_flags": [
+        "unable_to_verify",
+        "no_citation"
+      ],
+      "got_flags": [
+        "no_citation",
+        "unsupported"
+      ],
+      "missing_flags": [
+        "unable_to_verify"
+      ],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    },
+    {
+      "id": "N10",
+      "type": "no_evidence",
+      "question": "What documents are needed for a personal loan application?",
+      "expected_verdict": "Amber",
+      "got_verdict": "Amber",
+      "verdict_ok": true,
+      "expected_flags": [
+        "unable_to_verify",
+        "no_citation"
+      ],
+      "got_flags": [
+        "no_citation",
+        "unsupported"
+      ],
+      "missing_flags": [
+        "unable_to_verify"
+      ],
+      "per_check": {
+        "A": true,
+        "B": true,
+        "C": true
+      }
+    }
+  ]
+}

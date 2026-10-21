@@ -59,3 +59,11 @@ def eval_results():
     if not path.exists():
         return None
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+@router.post("/eval/run")
+async def run_eval_now():
+    """Same as `python -m app.eval`, started from the dashboard."""
+    from app.eval import run_eval
+
+    return await run_eval()

@@ -1,12 +1,12 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
-import { Placeholder } from "./components/ui";
 import Admin from "./pages/Admin";
 import Chat from "./pages/Chat";
 import KnowledgeBase from "./pages/KnowledgeBase";
 import ReviewDetail from "./pages/ReviewDetail";
 import ReviewQueue from "./pages/ReviewQueue";
 import Settings from "./pages/Settings";
+import TrustChallenge from "./pages/TrustChallenge";
 import { USERS, useRole } from "./roles";
 
 function Home() {
@@ -24,7 +24,7 @@ export default function App() {
         <Route path="review/:id" element={<ReviewDetail />} />
         <Route path="admin" element={<Admin />} />
         <Route path="kb" element={<KnowledgeBase />} />
-        <Route path="trust" element={<Placeholder title="Trust Challenge" phase={7} />} />
+        <Route path="trust" element={<TrustChallenge />} />
         <Route path="settings" element={<Settings />} />
         <Route path="*" element={<Home />} />
       </Route>

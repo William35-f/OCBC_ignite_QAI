@@ -1,0 +1,15 @@
+{
+  "_note": "Trust Challenge: 10 answers taken from cases.jsonl. 'trustworthy' is the ground truth. Five are subtly wrong.",
+  "items": [
+    {"case_id": "C01", "trustworthy": true, "why": "Matches the current Address Change Procedure."},
+    {"case_id": "C02", "trustworthy": true, "why": "Matches the current Card Replacement Procedure."},
+    {"case_id": "C04", "trustworthy": true, "why": "Matches the current Dormant Accounts Procedure."},
+    {"case_id": "C07", "trustworthy": true, "why": "Matches the current Fixed Deposit procedure (v2025)."},
+    {"case_id": "C10", "trustworthy": true, "why": "Matches the current Cash Deposit Procedure."},
+    {"case_id": "M02", "trustworthy": false, "why": "The fee is waived for cards damaged by a manufacturing fault."},
+    {"case_id": "M03", "trustworthy": false, "why": "It leaves out the scam-risk check required for a new payee."},
+    {"case_id": "M05", "trustworthy": false, "why": "A partial withdrawal must leave at least S$1,000 in the deposit."},
+    {"case_id": "O04", "trustworthy": false, "why": "It quotes the superseded v2022 procedure; v2025 pays 0.05% p.a."},
+    {"case_id": "N06", "trustworthy": false, "why": "No procedure states a safe deposit box price; the citation does not support it."}
+  ]
+}
