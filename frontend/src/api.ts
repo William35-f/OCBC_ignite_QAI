@@ -123,6 +123,10 @@ export interface PromptCheck {
 export type RunStatus = "checking_prompt" | "needs_details" | "running" | "done" | "error";
 
 export interface Run {
+  review: ReviewItem | null;
+  report_reason: string | null;
+  source: string;
+  user_name: string;
   id: number;
   created_at: string;
   question: string;
@@ -186,4 +190,37 @@ export interface Checks {
   source: { exceptions: unknown[]; cited_doc_ids: string[]; skipped_sentences: number[] };
   intent: { part: string; status: "answered" | "partly" | "not_answered"; reason: string }[];
   ignored_figures: string[];
+}
+
+// ---- Review ---------------------------------------------------------------
+
+export interface ReviewItem {
+  id: number;
+  run_id: number;
+  created_at: string;
+  queue_reason: "red" | "amber_after_retry" | "reported";
+  main_flag: string;
+  status: "pending" | "approved" | "corrected" | "rejected";
+  reviewer: string | null;
+  corrected_answer: string | null;
+  decision_reason: string | null;
+  decided_at: string | null;
+}
+
+export interface QueueRow extends ReviewItem {
+  question: string;
+  verdict: Verdict | null;
+  first_verdict: Verdict | null;
+  retried: boolean;
+  user_name: string;
+}
+
+export interface GoldenRow {
+  id: number;
+  created_at: string;
+  question: string;
+  details: Record<string, string>;
+  correct_answer: string;
+  source_docs: string[];
+  review_id: number | null;
 }

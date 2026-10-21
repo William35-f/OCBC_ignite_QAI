@@ -9,7 +9,7 @@ import asyncio
 import logging
 from datetime import datetime
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 
 from app.core.config import settings
 from app.core.db import SessionLocal
@@ -18,7 +18,7 @@ from app.services import ocbc_ai
 from app.services.audit import log_event
 from app.services.checks.runner import run_checks
 from app.services.prompt_check import run_prompt_check
-from app.services.review import enqueue
+from app.services.review import enqueue, latest_review, review_to_dict
 from app.services.self_correction import build_feedback, what_changed
 from app.services.verdict import route
 
@@ -133,7 +133,7 @@ def _finish(db: Session, run: Run, answer: str, checks: dict, retried: bool) -> 
     if where == "retry":  # cannot happen when retried=True: the retry limit is one
         raise RuntimeError("retry requested twice")
     run.final_answer, run.final_verdict, run.routed_to = answer, verdict, where
-    if where == "review":
+    if where == "review" and run.source == "chat":  # retest / eval runs never go to the queue
         reason = "red" if verdict == "Red" else "amber_after_retry"
         enqueue(db, run, reason, checks)
     run.status, run.stage = "done", "Done"
@@ -151,8 +151,14 @@ def record_employee_action(db: Session, run: Run, action: str, reason: str = "")
 
 
 def run_to_dict(run: Run) -> dict:
-    """What the frontend receives for one run."""
+    """What the frontend receives for one run, including any review decision."""
+    db = object_session(run)
+    review = review_to_dict(latest_review(db, run.id)) if db is not None else None
     return {
+        "review": review,
+        "report_reason": run.report_reason,
+        "source": run.source,
+        "user_name": run.user_name,
         "id": run.id,
         "created_at": run.created_at.isoformat(),
         "question": run.question,

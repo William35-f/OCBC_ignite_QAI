@@ -15,6 +15,7 @@ export const STAGES = [
 const RETRY_STAGES = ["Self-correcting: OCBC AI tries once more", "Re-checking the corrected answer"];
 
 const POLL_MS = 400;
+const REVIEW_POLL_MS = 5000;
 
 export default function RunCard({ initial }: { initial: Run }) {
   const [run, setRun] = useState<Run>(initial);
@@ -26,12 +27,15 @@ export default function RunCard({ initial }: { initial: Run }) {
     api.get<Run>(`/api/chat/runs/${initial.id}`).then(setRun).catch(() => {});
   }, [initial.id]);
 
-  // Poll while OCBC AI and Q AI are working
+  // Poll while OCBC AI and Q AI are working, then slowly while a reviewer has it
   useEffect(() => {
-    if (run.status !== "running" && run.status !== "checking_prompt") return;
+    const working = run.status === "running" || run.status === "checking_prompt";
+    const awaitingReview = run.status === "done" && (run.review?.status === "pending" ||
+      (run.routed_to === "review" && !run.review));
+    if (!working && !awaitingReview) return;
     const t = setTimeout(() => {
       api.get<Run>(`/api/chat/runs/${run.id}`).then(setRun).catch((e) => setError(e.message));
-    }, POLL_MS);
+    }, working ? POLL_MS : REVIEW_POLL_MS);
     return () => clearTimeout(t);
   }, [run]);
 

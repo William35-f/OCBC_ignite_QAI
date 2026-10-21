@@ -63,6 +63,36 @@ export const CHECK_NAMES: Record<string, string> = {
   C: "Intent",
 };
 
+export const FLAG_NAMES: Record<string, string> = {
+  outdated_source: "Outdated source",
+  quote_mismatch: "Quote does not match",
+  no_citation: "No citation",
+  citation_not_found: "Citation not found",
+  figure_mismatch: "Figure not in source",
+  contradicted: "Contradicted claim",
+  missing_exception: "Missing exception",
+  partly_supported: "Partly supported",
+  unsupported: "Unsupported claim",
+  unable_to_verify: "Unable to verify",
+  conflict_older_source: "Conflicting source",
+  conflict_note: "Known conflict (note)",
+  part_partly_answered: "Part partly answered",
+  part_not_answered: "Part not answered",
+};
+
+export const QUEUE_REASONS: Record<string, string> = {
+  red: "Red verdict",
+  amber_after_retry: "Amber after retry",
+  reported: "Reported by employee",
+};
+
+export const REVIEW_STATUS: Record<string, { tone: Tone; text: string }> = {
+  pending: { tone: "warn", text: "Pending" },
+  approved: { tone: "ok", text: "Approved" },
+  corrected: { tone: "ok", text: "Corrected" },
+  rejected: { tone: "bad", text: "Rejected" },
+};
+
 export const RULE_NAMES: Record<string, string> = {
   citation_exists: "Cites a source",
   source_current: "Source is current",

@@ -21,7 +21,10 @@ export default function AnswerView({ run, onChange }: { run: Run; onChange: (r: 
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
-  const inReview = run.routed_to === "review";
+  const review = run.review;
+  const decided = review && review.status !== "pending";
+  // "Use answer" waits for a reviewer, unless the reviewer approved or corrected it
+  const inReview = (run.routed_to === "review" || review?.status === "pending") && !(decided && review.status !== "rejected");
   const sentence = checks.sentences.find((s) => s.index === selected);
 
   const act = async (path: "use" | "report") => {
@@ -37,7 +40,29 @@ export default function AnswerView({ run, onChange }: { run: Run; onChange: (r: 
   return (
     <div className="card space-y-4">
       <div className="text-xs font-bold uppercase tracking-wide text-ink-muted">OCBC AI (simulated) · answer checked by Q AI</div>
-      <VerdictBanner verdict={checks.verdict} inReview={inReview} corrected={run.retried} />
+      <VerdictBanner
+        verdict={checks.verdict}
+        inReview={run.routed_to === "review"}
+        corrected={run.retried}
+        reviewed={Boolean(decided)}
+      />
+
+      {decided && review && (
+        <div
+          className={`rounded-xl border px-4 py-3 text-sm ${
+            review.status === "rejected" ? "border-bad/40 bg-bad-tint" : "border-ok/40 bg-ok-tint"
+          }`}
+          role="status"
+        >
+          <p className="font-bold">
+            {review.status === "corrected" && `Reviewed by ${review.reviewer}: corrected answer below`}
+            {review.status === "approved" && `Reviewed by ${review.reviewer}: approved`}
+            {review.status === "rejected" && `Reviewed by ${review.reviewer}: rejected – do not use this answer`}
+          </p>
+          {review.corrected_answer && <p className="mt-2 text-[15px] leading-relaxed">{review.corrected_answer}</p>}
+          <p className="mt-1 text-ink-muted">Reason: {review.decision_reason}</p>
+        </div>
+      )}
 
       <HighlightedAnswer checks={checks} selected={selected} onSelect={setSelected} />
 
@@ -72,10 +97,10 @@ export default function AnswerView({ run, onChange }: { run: Run; onChange: (r: 
             <button
               className="btn-primary"
               onClick={() => act("use")}
-              disabled={inReview}
+              disabled={inReview || review?.status === "rejected"}
               title={inReview ? "Wait for the reviewer before acting on this answer" : undefined}
             >
-              Use answer
+              {review?.status === "corrected" ? "Use corrected answer" : "Use answer"}
             </button>
             <button className="btn-secondary" onClick={() => setReporting(true)}>
               Report a problem

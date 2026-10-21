@@ -16,15 +16,22 @@ export default function VerdictBanner({
   verdict,
   inReview,
   corrected = false,
+  reviewed = false,
 }: {
   verdict: Verdict;
   inReview: boolean;
   corrected?: boolean;
+  reviewed?: boolean;
 }) {
   const v = VERDICTS[verdict];
   let title = v.title;
+  let text = inReview && verdict !== "Red" ? "A reviewer will check this answer." : v.text;
   if (verdict === "Amber" && inReview) title = "Amber: sent for review – check before acting";
   if (verdict === "Green" && corrected) title = "Green: corrected answer – checks passed";
+  if (reviewed) {
+    title = `${verdict}: reviewed by a person – see their decision below`;
+    text = "Q AI flagged OCBC AI's answer, and a reviewer has now checked it.";
+  }
   return (
     <div className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${STYLES[v.tone]}`} role="status">
       <span
@@ -35,7 +42,7 @@ export default function VerdictBanner({
       </span>
       <div>
         <p className="font-bold">{title}</p>
-        <p className="text-sm text-ink">{inReview && verdict !== "Red" ? "A reviewer will check this answer." : v.text}</p>
+        <p className="text-sm text-ink">{text}</p>
       </div>
     </div>
   );

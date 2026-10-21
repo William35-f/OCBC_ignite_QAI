@@ -3,6 +3,8 @@ import Layout from "./components/Layout";
 import { Placeholder } from "./components/ui";
 import Chat from "./pages/Chat";
 import KnowledgeBase from "./pages/KnowledgeBase";
+import ReviewDetail from "./pages/ReviewDetail";
+import ReviewQueue from "./pages/ReviewQueue";
 import Settings from "./pages/Settings";
 import { USERS, useRole } from "./roles";
 
@@ -17,7 +19,8 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="chat" element={<Chat />} />
-        <Route path="review" element={<Placeholder title="Review queue" phase={5} />} />
+        <Route path="review" element={<ReviewQueue />} />
+        <Route path="review/:id" element={<ReviewDetail />} />
         <Route path="admin" element={<Placeholder title="Dashboard" phase={6} />} />
         <Route path="kb" element={<KnowledgeBase />} />
         <Route path="trust" element={<Placeholder title="Trust Challenge" phase={7} />} />
