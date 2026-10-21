@@ -1,0 +1,10 @@
+{"id": "H01", "question": "What is the daily overseas transfer limit for an existing payee?", "details": {}, "expected_verdict": "Green", "note": "Both limits come from the current Payments Procedure v2026"}
+{"id": "H02", "question": "What should I do if a customer's debit card was stolen?", "details": {}, "expected_verdict": "Red", "note": "OCBC AI leaves out the police-report condition; Q AI must catch it"}
+{"id": "H03", "question": "How much is the card replacement fee?", "details": {}, "expected_verdict": "Green", "note": "Straight from the current card procedure"}
+{"id": "H04", "question": "What is the minimum initial deposit for a savings account?", "details": {}, "expected_verdict": "Green", "note": "Straight from the current account opening procedure"}
+{"id": "H05", "question": "When does an account become dormant?", "details": {}, "expected_verdict": "Green", "note": "Straight from the current dormant accounts procedure"}
+{"id": "H06", "question": "How many notes can a cash deposit machine accept?", "details": {}, "expected_verdict": "Green", "note": "Straight from the current cash deposit procedure"}
+{"id": "H07", "question": "Can a customer cancel an overseas transfer after it has been processed?", "details": {}, "expected_verdict": "Red", "note": "OCBC AI leaves out the referral to Payments Operations; Q AI must catch it"}
+{"id": "H08", "question": "Is there a fee for an overseas transfer of S$500?", "details": {}, "expected_verdict": "Green", "note": "S$500 is below the S$1,000 no-fee threshold"}
+{"id": "H09", "question": "What is the bank's policy on mortgage refinancing?", "details": {}, "expected_verdict": "Amber", "note": "No procedure covers it: the retry still has no source, so it goes to review"}
+{"id": "H10", "question": "Do large cash deposits need any extra paperwork?", "details": {}, "expected_verdict": "Green", "note": "Source-of-funds declaration from the current cash deposit procedure"}

@@ -28,7 +28,8 @@ log = logging.getLogger(__name__)
 async def _set_stage(db: Session, run: Run, stage: str) -> None:
     run.stage = stage
     db.commit()
-    if settings.step_delay_seconds:
+    # The pause only makes the "Checking..." labels readable in the chat; retests and evals skip it
+    if settings.step_delay_seconds and run.source == "chat":
         await asyncio.sleep(settings.step_delay_seconds)
 
 

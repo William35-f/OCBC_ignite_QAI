@@ -5,11 +5,14 @@ Python then applies the guard-rails (only the matching document's required
 details, at most N follow-ups) and runs each assumption through the claim
 checker. A contradicted assumption becomes a correction note.
 """
+import re
+
 from app.core.llm import call_json
 from app.core.runtime import get_runtime
 from app.schemas.workflow import PromptCheckResult
 from app.services.checks.source_check import label_claims
 from app.services.knowledge_base import get_kb
+from app.services.text import STOPWORDS, keywords, stem
 
 
 # Follow-up questions are only asked when the knowledge base clearly covers the
@@ -87,4 +90,17 @@ async def run_prompt_check(question: str, details: dict) -> dict:
         "assumption_checks": [c.model_dump() for c in checks],
         "correction_notes": notes,
         "matched_document": candidates[0]["label"] if candidates else None,
+        "covered": strong,
+        "coverage_topic": (result.topic or candidates[0]["topic"]) if strong else _uncovered_terms(question),
     }
+
+
+def _uncovered_terms(question: str) -> str:
+    """For a question no document covers well: the words in it that no
+    document uses (e.g. "cryptocurrency crypto wallet"). Used by the
+    "Add coverage for <topic>" fix suggestion."""
+    kb = get_kb()
+    known = set().union(*(keywords(f"{p.heading} {p.text}") for d in kb.docs.values() for p in d.passages))
+    ordered = [stem(t) for t in re.findall(r"[a-z][a-z'-]*[a-z]", question.lower()) if t not in STOPWORDS]
+    words = [w for w in dict.fromkeys(ordered) if w not in known]
+    return " ".join(words[:4]) or "questions not covered by any procedure"

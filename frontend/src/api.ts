@@ -224,3 +224,64 @@ export interface GoldenRow {
   source_docs: string[];
   review_id: number | null;
 }
+
+// ---- Admin -------------------------------------------------------------------
+
+export interface Dashboard {
+  totals: {
+    answers: number;
+    green: number;
+    amber: number;
+    red: number;
+    retried: number;
+    fixed_by_retry: number;
+    pending_reviews: number;
+    used: number;
+    reported: number;
+    golden: number;
+  };
+  verdicts_over_time: { day: string; Green: number; Amber: number; Red: number }[];
+  flag_counts: { type: string; count: number }[];
+  topic_failures: { topic: string; failed: number; total: number }[];
+  doc_errors: { doc_id: string; doc_label: string; errors: Record<string, number>; total: number }[];
+  reviewer_decisions: { approved: number; corrected: number; rejected: number };
+}
+
+export interface Suggestion {
+  id: string;
+  kind: "retire_document" | "resolve_conflict" | "add_coverage";
+  target: string;
+  title: string;
+  evidence: string;
+  count: number;
+  status: "open" | "applied" | "done";
+  can_apply: boolean;
+}
+
+export interface RetestResult {
+  id: number;
+  created_at: string;
+  passed: boolean;
+  passed_count: number;
+  total: number;
+  results: {
+    kind: "golden" | "held-out";
+    question: string;
+    details: Record<string, string>;
+    expected: string;
+    got: string | null;
+    passed: boolean;
+    reason: string;
+    answer: string | null;
+  }[];
+}
+
+export interface ActivityRow {
+  id: number;
+  at: string;
+  event: string;
+  actor: string;
+  run_id: number | null;
+  question: string | null;
+  data: Record<string, unknown>;
+}

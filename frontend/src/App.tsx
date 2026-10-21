@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import { Placeholder } from "./components/ui";
+import Admin from "./pages/Admin";
 import Chat from "./pages/Chat";
 import KnowledgeBase from "./pages/KnowledgeBase";
 import ReviewDetail from "./pages/ReviewDetail";
@@ -21,7 +22,7 @@ export default function App() {
         <Route path="chat" element={<Chat />} />
         <Route path="review" element={<ReviewQueue />} />
         <Route path="review/:id" element={<ReviewDetail />} />
-        <Route path="admin" element={<Placeholder title="Dashboard" phase={6} />} />
+        <Route path="admin" element={<Admin />} />
         <Route path="kb" element={<KnowledgeBase />} />
         <Route path="trust" element={<Placeholder title="Trust Challenge" phase={7} />} />
         <Route path="settings" element={<Settings />} />

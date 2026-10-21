@@ -80,7 +80,8 @@ def prompt_check(p: dict) -> dict:
                 known[rd["name"]] = opt
         if rd["name"] in details or rd["name"] in known:
             continue
-        if any(term in q for term in rd.get("needed_when", [])):
+        # whole words only: "process" should not match "processed"
+        if any(re.search(rf"\b{re.escape(term)}\b", q) for term in rd.get("needed_when", [])):
             missing.append({"name": rd["name"], "question": rd["question"], "options": rd["options"]})
 
     return {
@@ -235,6 +236,9 @@ def _clauses(text: str) -> list[str]:
     return [s.strip() for s in re.split(r";|(?<=\.)\s+", text) if s.strip()]
 
 
+LABEL_RANK = {"Supported": 0, "Partly supported": 1, "Unsupported": 2, "Contradicted": 3}
+
+
 def _label_one(claim: dict, detail_words: set[str], ignore: set[str]) -> dict:
     text, evidence = claim["text"], claim["evidence"]
     all_ids = [e["id"] for e in evidence]
@@ -244,6 +248,17 @@ def _label_one(claim: dict, detail_words: set[str], ignore: set[str]) -> dict:
 
     if ABSENCE_RE.search(text):
         return result("Supported", "None of the current passages states this, which matches the claim.")
+
+    # "Limit: A for X; B for Y" states two facts: check each clause on its own
+    # (each clause names its own case, so the employee's details are not mixed in)
+    parts = _clauses(text)
+    if len(parts) > 1 and len([p for p in parts if extract_figures(p)]) > 1:
+        labelled = [_label_one({**claim, "text": p}, set(), ignore) for p in parts]
+        worst = max(labelled, key=lambda r: LABEL_RANK[r["label"]])
+        if worst["label"] == "Supported":
+            ids = sorted({i for r in labelled for i in r["evidence_ids"]})
+            return result("Supported", "Every part of this sentence matches the current procedure.", ids)
+        return worst
 
     claim_words = keywords(text)
     figures = [f for f in extract_figures(text) if f[1] not in ignore]
