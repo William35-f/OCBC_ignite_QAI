@@ -9,7 +9,7 @@ around such an assistant:
 
 | | |
 |---|---|
-| **OCBC AI (simulated)** | A basic RAG assistant over a fictional bank's procedures. Deliberately imperfect: its retriever indexes *all* documents, including superseded ones. |
+| **OCBC AI (simulated)** | A basic RAG assistant over a fictional bank's procedures. Deliberately imperfect: its retriever indexes *all* documents, including outdated old versions that a newer version has replaced. |
 | **Q AI** | Checks the question **before** OCBC AI answers and the answer **after**. Explains the result, gives Amber answers one retry, and sends untrustworthy answers to a human reviewer. It never edits OCBC AI's answers itself. |
 
 Three roles, switched in the top bar (no login): **Rachel Lim** (Employee, Branch Service Officer),
@@ -172,8 +172,8 @@ title: Cheque Deposit Procedure
 topic: cheque_deposits
 version: v2026
 effective_date: 2026-05-01
-status: current            # current | superseded
-superseded_by: null        # id of the newer version, if superseded
+status: current            # current, or superseded = outdated (a newer version replaced it)
+superseded_by: null        # id of the newer version that replaced it
 owner: Branch Network
 required_details:          # follow-up questions Q AI may ask (optional)
   - name: cheque_type
@@ -196,7 +196,7 @@ Cheque deposits up to S$50,000 per day can be accepted at the counter.
 ```
 
 2. Restart the backend (`npm run dev`). It re-reads every file, rebuilds the vector store and recomputes
-   conflicts (same topic + same field + different value, ignoring superseded documents and old/new
+   conflicts (same topic + same field + different value, ignoring outdated documents and old/new
    versions of the same procedure).
 
 Rules: numbered sections use `## §n` or `### §n.m`; every document needs a `## Conditions and exceptions`

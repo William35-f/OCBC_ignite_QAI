@@ -73,7 +73,7 @@ export function EvidencePanel({ sentence }: { sentence: SentenceView | undefined
           {sentence.citations.some((c) => c.status === "superseded") && (
             <>
               {" "}
-              <Badge tone="bad">Superseded</Badge>
+              <Badge tone="bad">Outdated version</Badge>
             </>
           )}
         </p>
@@ -87,7 +87,7 @@ export function EvidencePanel({ sentence }: { sentence: SentenceView | undefined
                 <span className="font-semibold text-ink">{e.doc_label}</span>
                 <span>{e.section_label}</span>
                 <span>· effective {e.effective_date}</span>
-                <Badge tone={e.status === "current" ? "ok" : "bad"}>{e.status === "current" ? "Current" : "Superseded"}</Badge>
+                <Badge tone={e.status === "current" ? "ok" : "bad"}>{e.status === "current" ? "Current" : "Outdated"}</Badge>
               </div>
               <p>{e.text}</p>
             </blockquote>

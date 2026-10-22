@@ -142,7 +142,7 @@ def suggestions(db: Session) -> list[dict]:
         if row is not None and row.retriever_enabled and status != "open":
             status = "open"  # switched back on by hand: the problem is back
         evidence = (f"{_label(doc_id)} is still being retrieved by OCBC AI: it was cited in {n} answer(s) "
-                    f"although it is superseded." if row is None or row.retriever_enabled
+                    f"although a newer version has replaced it." if row is None or row.retriever_enabled
                     else f"{_label(doc_id)} was cited in {n} answer(s). It is now excluded from OCBC AI's retriever.")
         out.append({
             "id": f"retire:{doc_id}", "kind": "retire_document", "target": doc_id,

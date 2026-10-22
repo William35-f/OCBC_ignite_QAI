@@ -49,7 +49,8 @@ export default function KnowledgeBase() {
         <h1 className="page-title">Knowledge base</h1>
         <p className="muted mt-1">
           Synthetic procedures of a fictional bank. OCBC AI retrieves from every document whose retriever is on,
-          including superseded ones. Q AI checks answers against current documents only.
+          including old versions that a newer version has replaced. Q AI checks answers against current documents
+          only.
         </p>
       </div>
 
@@ -85,8 +86,8 @@ export default function KnowledgeBase() {
                           <Badge tone="ok">Current</Badge>
                         ) : (
                           <div className="space-y-1">
-                            <Badge tone="bad">Superseded</Badge>
-                            <div className="text-xs text-ink-muted">by {labelOf(d.superseded_by)}</div>
+                            <Badge tone="bad">Outdated</Badge>
+                            <div className="text-xs text-ink-muted">replaced by {labelOf(d.superseded_by)}</div>
                           </div>
                         )}
                       </td>
