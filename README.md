@@ -41,6 +41,15 @@ default mock LLM provider.
 | `npm run build` | Production build of the frontend |
 | `npm run dev:api:reload` | Backend only, with auto-reload while you edit code |
 
+### Troubleshooting
+
+| You see | Fix |
+|---|---|
+| `npm error Missing script: "dev"` | You are in the wrong folder. `cd` into the `q-ai` folder first. |
+| "Waiting for the Q AI backend to load…" for a while | Normal on the first start after a reboot: the machine-learning libraries and the embedding model take 1–2 minutes to load. The website starts by itself once the backend prints "Q AI backend ready". |
+| "Cannot reach the Q AI backend" in the browser | The backend is not running or still loading. Check the `[api]` lines in the terminal. |
+| `address already in use` / port 8000 or 5173 busy | An old `npm run dev` is still running. Close that terminal (or Ctrl+C in it), then start again. |
+
 ---
 
 ## The workflow

@@ -3,6 +3,7 @@
 Start with:  python -m uvicorn app.main:app --port 8000   (or `npm run dev` from the project root)
 """
 import logging
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -20,12 +21,14 @@ log = logging.getLogger("qai")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    started = time.perf_counter()
     init_db()
-    log.info("Loading knowledge base and building the vector store...")
+    log.info("Loading knowledge base and building the vector store (first start can take 1-2 minutes)...")
     kb_obj = get_kb()  # loads once per process (a restart reloads the markdown files)
     with SessionLocal() as db:
         sync_to_db(db, kb_obj)
     log.info("Knowledge base ready: %d documents, %d conflict pair(s)", len(kb_obj.docs), len(kb_obj.conflicts))
+    log.info("Q AI backend ready in %.0fs. Open http://localhost:5173 in your browser.", time.perf_counter() - started)
     yield
 
 
