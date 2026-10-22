@@ -14,7 +14,7 @@ class ReviewItem(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     run_id: Mapped[int] = mapped_column(ForeignKey("runs.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
-    # Why it is in the queue: red | amber_after_retry | reported
+    # Why it is in the queue: red | amber_after_retry | reported | used_after_amber
     queue_reason: Mapped[str] = mapped_column(String)
     main_flag: Mapped[str] = mapped_column(String, default="")
     status: Mapped[str] = mapped_column(String, default="pending")  # pending | approved | corrected | rejected

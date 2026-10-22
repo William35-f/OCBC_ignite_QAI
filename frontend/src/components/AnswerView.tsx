@@ -127,7 +127,17 @@ function Actions({ run, onChange }: { run: Run; onChange: (r: Run) => void }) {
   return (
     <>
       <div className="flex flex-wrap items-center gap-2 border-t border-line pt-4">
-        {run.employee_action === "used" && <p className="text-sm font-semibold text-ok">Logged: you used this answer.</p>}
+        {run.employee_action === "used" && (
+          <div className="text-sm">
+            <p className="font-semibold text-ok">Logged: you used this answer.</p>
+            {review?.queue_reason === "used_after_amber" && review.status === "pending" && (
+              <p className="text-ink-muted">
+                This answer was Amber before OCBC AI's retry, so a copy went to a reviewer (Daniel Ng) to check
+                afterwards. You will see their decision here.
+              </p>
+            )}
+          </div>
+        )}
         {run.employee_action === "reported" && (
           <p className="text-sm font-semibold text-brand-dark">Reported: sent to the review queue. Thank you.</p>
         )}

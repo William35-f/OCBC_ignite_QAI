@@ -125,6 +125,7 @@ export type RunStatus = "checking_prompt" | "needs_details" | "running" | "done"
 export interface Run {
   review: ReviewItem | null;
   report_reason: string | null;
+  employee_action_at: string | null;
   source: string;
   user_name: string;
   id: number;
@@ -198,7 +199,7 @@ export interface ReviewItem {
   id: number;
   run_id: number;
   created_at: string;
-  queue_reason: "red" | "amber_after_retry" | "reported";
+  queue_reason: "red" | "amber_after_retry" | "reported" | "used_after_amber";
   main_flag: string;
   status: "pending" | "approved" | "corrected" | "rejected";
   reviewer: string | null;

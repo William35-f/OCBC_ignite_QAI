@@ -27,6 +27,25 @@ def test_queue_holds_red_amber_after_retry_and_reported(client):
     assert reasons[green["id"]] == "reported"
 
 
+def test_using_an_answer_that_was_amber_sends_a_copy_to_review(client):
+    run = client.post("/api/chat/ask", json={"question": Q["amber"]}).json()
+    run = client.get(f"/api/chat/runs/{run['id']}").json()
+    assert run["original_verdict"] == "Amber" and run["final_verdict"] == "Green"
+    assert run["review"] is None  # nothing for Daniel until Rachel uses it
+
+    run = client.post(f"/api/chat/runs/{run['id']}/use").json()
+    assert run["employee_action"] == "used" and run["employee_action_at"]
+    assert run["review"]["queue_reason"] == "used_after_amber" and run["review"]["status"] == "pending"
+    item = item_for(client, run["id"])
+    assert item["queue_reason"] == "used_after_amber" and item["main_flag"] == "unsupported"
+
+
+def test_using_a_green_answer_does_not_go_to_review(client):
+    run = client.post("/api/chat/ask", json={"question": Q["green"]}).json()
+    run = client.post(f"/api/chat/runs/{run['id']}/use").json()
+    assert run["review"] is None
+
+
 def test_detail_has_question_answers_flags_and_evidence(client):
     item = item_for(client, red_run(client))
     detail = client.get(f"/api/review/items/{item['id']}").json()

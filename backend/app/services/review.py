@@ -1,7 +1,8 @@
 """Step 7 - the human review queue (one queue for every reason).
 
 The queue holds Red answers, Amber answers that failed their one retry,
-and answers an employee reported. A reviewer approves, corrects or rejects
+answers an employee reported, and answers an employee used that were Amber
+before the retry fixed them (an after-use check). A reviewer approves, corrects or rejects
 each one, always with a reason. Approved and corrected answers go into the
 golden set, which "Run retest" uses later.
 """

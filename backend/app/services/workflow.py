@@ -147,6 +147,10 @@ def record_employee_action(db: Session, run: Run, action: str, reason: str = "")
     log_event(db, f"employee_{action}", run.id, actor=run.user_name, reason=reason)
     if action == "reported":
         enqueue(db, run, "reported", run.retry_checks or run.original_checks)
+    elif action == "used" and run.original_verdict == "Amber" and latest_review(db, run.id) is None:
+        # The answer was Amber before OCBC AI's retry fixed it. The employee may use it,
+        # but a reviewer still gets a copy to check afterwards (an audit, not a block).
+        enqueue(db, run, "used_after_amber", run.original_checks)
     db.commit()
     return run
 
@@ -158,6 +162,7 @@ def run_to_dict(run: Run) -> dict:
     return {
         "review": review,
         "report_reason": run.report_reason,
+        "employee_action_at": run.employee_action_at.isoformat() if run.employee_action_at else None,
         "source": run.source,
         "user_name": run.user_name,
         "id": run.id,

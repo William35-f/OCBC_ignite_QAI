@@ -84,6 +84,7 @@ export const QUEUE_REASONS: Record<string, string> = {
   red: "Red verdict",
   amber_after_retry: "Amber after retry",
   reported: "Reported by employee",
+  used_after_amber: "Used after Amber – check",
 };
 
 export const REVIEW_STATUS: Record<string, { tone: Tone; text: string }> = {

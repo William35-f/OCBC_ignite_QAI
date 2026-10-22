@@ -88,6 +88,14 @@ export default function ReviewDetail() {
             {pc.correction_notes.join(" ")}
           </p>
         )}
+        {run.employee_action === "used" && (
+          <p className="rounded-lg bg-warn-tint px-3 py-2 text-sm">
+            <strong>{run.user_name} already used this answer</strong>
+            {run.employee_action_at && ` on ${new Date(run.employee_action_at).toLocaleString()}`}.{" "}
+            {item.queue_reason === "used_after_amber" &&
+              "It was Amber at first and Green only after OCBC AI's retry, so it needs a check after the fact. If it is wrong, correct it: the employee will see your correction."}
+          </p>
+        )}
         {run.report_reason && (
           <p className="rounded-lg bg-brand-tint px-3 py-2 text-sm">
             <strong>Employee's report:</strong> {run.report_reason}

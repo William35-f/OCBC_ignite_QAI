@@ -83,7 +83,8 @@ default mock LLM provider.
 - **Step 5b** – Amber only, **one** retry: OCBC AI gets its flags plus the correct passages and answers
   again; Q AI re-checks. The original answer is always kept; the employee sees a "What changed" diff.
 - **Steps 6–8** – evidence view with highlighted sentences and source passages, Use / Report buttons,
-  one review queue (Approve / Correct / Reject with a reason, approved and corrected answers go to the
+  one review queue (Red answers, Amber answers that fail their retry, reported answers, and answers an
+  employee used that were Amber before the retry fixed them; Approve / Correct / Reject with a reason, approved and corrected answers go to the
   golden set), and an admin dashboard with template fix suggestions, **Apply fix** and **Run retest**.
 
 **Design decisions made where the brief left room**
