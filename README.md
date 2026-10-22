@@ -118,6 +118,9 @@ Start from a clean state: `npm run reset`, then `npm run dev`, open http://local
    *"Payments Procedure v2026 §3.1 says S$5,000 per day for new payees, not S$10,000."*
 5. **No evidence (1:25).** Pick *5*. The claim is **Unable to verify** → Amber → the retry says
    *"No approved source was found…"* → still Amber → **sent for review**.
+   *Optional:* pick *6. Amber – still Amber after the retry*. OCBC AI says a replacement card "arrives within
+   5 working days" (no source) → Amber → its retry drops the number but still guesses "within one week" →
+   **Partly supported**, still Amber → sent for review. One retry only, never two.
 6. **Review (1:40).** Switch to **Daniel Ng**. Open Mr Tan's question in the queue: original answer,
    flags and evidence side by side. Paste the correction
    *"For a new overseas payee, the limit is S$5,000 per day. Verify the customer's ID and complete the
@@ -225,7 +228,7 @@ Current results with the **mock** provider:
 | False flags (correct answers flagged) | 0 / 10 |
 | Accuracy per check | A 100% · B 100% · C 92% |
 | Expected flags found | 84% |
-| Amber answers fixed by one retry | 1 / 3 (the other 2 have no source – correctly sent to review) |
+| Amber answers fixed by one retry | 1 / 4 (two have no source and one still guesses after its retry – all correctly sent to review) |
 
 Read these honestly: the mock checker is rule-based and was developed alongside these cases, so the
 numbers are optimistic. Known misses: the mock intent check only marks "how / what do I need to" parts

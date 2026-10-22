@@ -6,7 +6,7 @@ Q = {s["id"]: s["question"] for s in SCENARIOS}
 
 def test_scenarios_listed(client):
     assert [s["id"] for s in client.get("/api/chat/scenarios").json()] == [
-        "red", "amber", "green", "assumption", "no_evidence",
+        "red", "amber", "green", "assumption", "no_evidence", "amber_stays",
     ]
 
 

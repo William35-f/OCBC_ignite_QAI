@@ -14,6 +14,7 @@ from app.core.llm.mock import mock_handler
 from app.services.text import ABSENCE_RE, NO_SOURCE_RE, STOPWORDS, extract_figures, keywords, split_sentences
 
 V2024, V2026 = "payments-procedure-v2024", "payments-procedure-v2026"
+CARD = "card-replacement-v2025"
 
 
 # =============================================================================
@@ -161,6 +162,14 @@ def ocbc_answer(p: dict) -> str:
                 return text + " (Payments Procedure v2026, §3.1, §4.2)"
             return text + " (Payments Procedure v2026, §3.1)"
 
+    # Scenario 6 (still Amber after the retry): card delivery time + fee. The card
+    # procedure only says the card is mailed; it states no delivery time.
+    if "card" in q and re.search(r"how long|arrive", q) and _has(passages, CARD):
+        return (
+            "A replacement card arrives within 5 working days. A replacement fee of S$15 is charged to the "
+            "customer's account. (Card Replacement Procedure v2025, §3)"
+        )
+
     # Scenario 2 (Amber): arrival time + fee. No document states an arrival time.
     if re.search(r"how long|arrive|take", q) and "fee" in q and _has(passages, V2026, "5"):
         return (
@@ -186,6 +195,15 @@ def _retry_answer(p: dict) -> str:
         return (
             "Arrival time depends on the receiving bank; the procedure does not state a fixed time. "
             "There is no fee for transfers below S$1,000. (Payments Procedure v2026, §5)"
+        )
+
+    # Scenario 6: OCBC AI drops the made-up "5 working days" but still guesses a
+    # delivery time, so the retry is only partly supported -> still Amber -> review
+    if previous.startswith("A replacement card arrives within 5 working days."):
+        return (
+            "The replacement card is mailed to the customer's registered address and usually arrives within one "
+            "week, or two weeks for overseas addresses. A replacement fee of S$15 is charged to the customer's "
+            "account. (Card Replacement Procedure v2025, §3, §4)"
         )
 
     # Generic: keep only the sentences Q AI did not flag

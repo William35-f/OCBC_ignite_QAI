@@ -31,4 +31,10 @@ SCENARIOS = [
         "question": "Can I process a cryptocurrency transfer to a customer's crypto wallet?",
         "hint": "",
     },
+    {
+        "id": "amber_stays",
+        "label": "6. Amber – still Amber after the retry",
+        "question": "How long does a replacement debit card take to arrive, and is there a fee?",
+        "hint": "OCBC AI's retry is better but still guesses a delivery time, so it goes to the reviewer.",
+    },
 ]

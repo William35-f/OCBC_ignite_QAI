@@ -1,4 +1,4 @@
-"""End-to-end: the five demo scenarios through the API, mock provider, as in the brief."""
+"""End-to-end: the demo scenarios through the API, mock provider, as in the brief (plus scenario 6)."""
 import pytest
 
 from app.models import Document
@@ -103,3 +103,16 @@ def test_5_no_evidence(client, fresh_retriever):
     assert run["original_verdict"] == "Amber" and run["retried"]
     assert "No approved source was found" in run["retry_answer"]
     assert run["retry_verdict"] == "Amber" and run["routed_to"] == "review"
+
+
+def test_6_still_amber_after_the_retry(client, fresh_retriever):
+    run = ask(client, Q["amber_stays"])
+    assert run["original_answer"].startswith("A replacement card arrives within 5 working days.")
+    assert [s["label"] for s in run["original_checks"]["sentences"]] == ["Unsupported", "Supported"]
+    assert run["original_verdict"] == "Amber" and run["retried"]
+    # The retry drops the made-up figure but still guesses a delivery time
+    assert "5 working days" not in run["retry_answer"]
+    assert [s["label"] for s in run["retry_checks"]["sentences"]] == ["Partly supported", "Supported"]
+    assert run["retry_verdict"] == "Amber" and run["final_verdict"] == "Amber"
+    assert run["routed_to"] == "review"  # never a second retry
+    assert run["review"]["queue_reason"] == "amber_after_retry"

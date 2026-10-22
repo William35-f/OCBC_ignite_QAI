@@ -1,5 +1,5 @@
 {
-  "run_at": "2026-10-22T02:32:51",
+  "run_at": "2026-10-22T16:52:53",
   "provider": "mock",
   "cases": 40,
   "verdict_accuracy": 1.0,
@@ -38,9 +38,9 @@
     }
   },
   "retry": {
-    "amber_first": 3,
+    "amber_first": 4,
     "fixed": 1,
-    "rate": 0.333,
+    "rate": 0.25,
     "rows": [
       {
         "question": "How long does an overseas transfer take, and is there a fee?",
@@ -49,6 +49,11 @@
       },
       {
         "question": "Can I process a cryptocurrency transfer to a customer's crypto wallet?",
+        "retry_verdict": "Amber",
+        "fixed": false
+      },
+      {
+        "question": "How long does a replacement debit card take to arrive, and is there a fee?",
         "retry_verdict": "Amber",
         "fixed": false
       },
