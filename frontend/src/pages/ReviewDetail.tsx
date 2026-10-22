@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { api, type Checks, type ReviewItem, type Run } from "../api";
 import { EvidencePanel, FlagList, HighlightedAnswer, PartsList, RuleSummary } from "../components/Evidence";
 import { QUEUE_REASONS, REVIEW_STATUS, VERDICTS } from "../components/labels";
+import { AgentAnswer, LaneHeader } from "../components/Lanes";
 import { Badge, ErrorNote, Spinner } from "../components/ui";
 import { USERS } from "../roles";
 
@@ -97,21 +98,23 @@ export default function ReviewDetail() {
       {/* Side by side: original / retry / correction */}
       <section className={`grid gap-4 ${run.retry_answer ? "xl:grid-cols-3" : "lg:grid-cols-2"}`}>
         <AnswerColumn
-          title="Original answer"
+          title="original answer"
+          text={run.original_answer}
           checks={run.original_checks}
           selected={selected?.which === "original" ? selected.index : null}
           onSelect={(i) => setSelected({ which: "original", index: i })}
         />
         {run.retry_answer && (
           <AnswerColumn
-            title="Retry answer (after Q AI feedback)"
+            title="retry answer, after Q AI's feedback"
+            text={run.retry_answer}
             checks={run.retry_checks}
             selected={selected?.which === "retry" ? selected.index : null}
             onSelect={(i) => setSelected({ which: "retry", index: i })}
           />
         )}
         <div className="card space-y-2">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">Correction</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wide text-ink">Reviewer · your correction</h2>
           <label htmlFor="correction" className="sr-only">
             Corrected answer
           </label>
@@ -189,25 +192,29 @@ export default function ReviewDetail() {
 
 function AnswerColumn({
   title,
+  text,
   checks,
   selected,
   onSelect,
 }: {
   title: string;
+  text: string | null;
   checks: Checks | null;
   selected: number | null;
   onSelect: (i: number) => void;
 }) {
   return (
     <div className="card space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">{title}</h2>
-        {checks && <Badge tone={VERDICTS[checks.verdict].tone}>{checks.verdict}</Badge>}
-      </div>
-      {checks ? (
-        <HighlightedAnswer checks={checks} selected={selected} onSelect={onSelect} />
-      ) : (
-        <p className="text-sm text-ink-muted">No answer.</p>
+      {text ? <AgentAnswer title={title} text={text} checked /> : <p className="text-sm text-ink-muted">No answer.</p>}
+      {checks && (
+        <div className="space-y-2 border-t border-line pt-3">
+          <LaneHeader
+            who="qai"
+            title="labels on each sentence"
+            extra={<Badge tone={VERDICTS[checks.verdict].tone}>{checks.verdict}</Badge>}
+          />
+          <HighlightedAnswer checks={checks} selected={selected} onSelect={onSelect} />
+        </div>
       )}
     </div>
   );

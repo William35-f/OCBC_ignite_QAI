@@ -1,7 +1,10 @@
-// One question in the chat thread: the prompt check, follow-up chips, progress and OCBC AI's answer.
+// One question in the chat thread, in the order things happen:
+//   You -> Q AI checks the question -> OCBC AI's exact answer -> Q AI checks the answer
+//   (-> Q AI feedback -> OCBC AI's second answer -> Q AI checks it, for an Amber retry)
 import { useEffect, useState } from "react";
 import { api, type Run } from "../api";
 import AnswerView from "./AnswerView";
+import { AgentAnswer, LaneHeader, RetryFeedback } from "./Lanes";
 import { Badge, ErrorNote } from "./ui";
 
 // Workflow steps in order, as the backend names them in run.stage
@@ -13,6 +16,15 @@ export const STAGES = [
 ];
 // Only shown when an Amber answer gets its one retry (Step 5b)
 const RETRY_STAGES = ["Self-correcting: OCBC AI tries once more", "Re-checking the corrected answer"];
+// Who does each step, shown next to it in the progress list
+const WHO: Record<string, string> = {
+  "Checking your question": "Q AI",
+  "OCBC AI is answering": "OCBC AI",
+  "Checking rules, sources and intent": "Q AI",
+  "Deciding verdict": "Q AI",
+  "Self-correcting: OCBC AI tries once more": "OCBC AI",
+  "Re-checking the corrected answer": "Q AI",
+};
 
 const POLL_MS = 400;
 const REVIEW_POLL_MS = 5000;
@@ -64,7 +76,8 @@ export default function RunCard({ initial }: { initial: Run }) {
 
   return (
     <article className="space-y-3">
-      {/* Employee's question */}
+      {/* The employee's question */}
+      <p className="text-right text-xs font-bold uppercase tracking-wide text-ink-muted">You</p>
       <div className="flex justify-end">
         <div className="max-w-[85%] rounded-2xl rounded-br-md bg-ink px-4 py-3 text-sm text-surface">
           {run.question}
@@ -76,13 +89,15 @@ export default function RunCard({ initial }: { initial: Run }) {
         </div>
       </div>
 
-      {/* Q AI prompt check */}
+      {/* Step 1 - Q AI checks the question (before OCBC AI answers) */}
       {pc && (
         <div className="card space-y-3 border-l-4 border-l-brand py-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wide text-brand-dark">Q AI · prompt check</span>
-            {pc.matched_document && <Badge tone="muted">Topic: {pc.topic.replace(/_/g, " ")}</Badge>}
-          </div>
+          <LaneHeader
+            who="qai"
+            step={1}
+            title="checks your question before OCBC AI answers"
+            extra={pc.matched_document && <Badge tone="muted">Topic: {pc.topic.replace(/_/g, " ")}</Badge>}
+          />
 
           {pc.correction_notes.map((note) => (
             <div key={note} className="rounded-xl border border-warn/40 bg-warn-tint px-3 py-2 text-sm text-ink" role="note">
@@ -122,11 +137,51 @@ export default function RunCard({ initial }: { initial: Run }) {
         </div>
       )}
 
-      {/* Progress */}
-      {(run.status === "running" || run.status === "checking_prompt") && <Progress stage={run.stage} />}
+      {/* Step 2 - OCBC AI's exact answer, as soon as it exists */}
+      {run.original_answer && (
+        <AgentAnswer
+          step={2}
+          title={run.retried ? "first answer" : "answers your question"}
+          text={run.original_answer}
+          checked={Boolean(run.original_checks)}
+        />
+      )}
 
-      {/* OCBC AI answer with Q AI's evidence view */}
-      {run.status === "done" && run.original_checks && <AnswerView run={run} onChange={setRun} />}
+      {/* Step 3 - Q AI checks that answer */}
+      {run.original_checks && (run.retried || run.status === "done") && (
+        <AnswerView
+          checks={run.original_checks}
+          step={3}
+          title="checks OCBC AI's answer"
+          mode={run.retried ? "retrying" : "final"}
+          run={run}
+          onChange={setRun}
+        />
+      )}
+
+      {/* Steps 4-6 - one retry for an Amber answer */}
+      {run.retried && run.retry_feedback && <RetryFeedback step={4} feedback={run.retry_feedback} />}
+      {run.retry_answer && (
+        <AgentAnswer
+          step={5}
+          title="answers again after Q AI's feedback"
+          text={run.retry_answer}
+          checked={Boolean(run.retry_checks)}
+        />
+      )}
+      {run.retry_checks && run.status === "done" && (
+        <AnswerView
+          checks={run.retry_checks}
+          step={6}
+          title="checks OCBC AI's new answer"
+          mode="final"
+          run={run}
+          onChange={setRun}
+        />
+      )}
+
+      {/* Progress while OCBC AI or Q AI is working */}
+      {(run.status === "running" || run.status === "checking_prompt") && <Progress stage={run.stage} />}
 
       {run.status === "error" && <ErrorNote message={run.error ?? "The workflow failed."} />}
       {error && <ErrorNote message={error} />}
@@ -157,6 +212,9 @@ function Progress({ stage }: { stage: string }) {
               )}
               {state === "todo" && <span className="w-14 text-xs text-ink-muted">Waiting</span>}
               <span className={state === "todo" ? "text-ink-muted" : "text-ink"}>
+                <span className={`mr-1.5 text-xs font-bold ${WHO[s] === "Q AI" ? "text-brand-dark" : "text-ink"}`}>
+                  {WHO[s]}
+                </span>
                 {s}
                 {s === "Checking rules, sources and intent" && (
                   <span className="block text-xs text-ink-muted">A rules · B sources · C intent, in parallel</span>

@@ -2,9 +2,9 @@
 // Round B the same answers with Q AI's evidence view. Order is shuffled each round.
 import { useEffect, useState } from "react";
 import { api, type RoundScore, type TrustItem } from "../api";
-import { EvidencePanel, FlagList, HighlightedAnswer } from "../components/Evidence";
+import AnswerView from "../components/AnswerView";
+import { AgentAnswer } from "../components/Lanes";
 import { Badge, ErrorNote, Spinner } from "../components/ui";
-import VerdictBanner from "../components/VerdictBanner";
 
 type Phase = "intro" | "A" | "B" | "done";
 
@@ -38,7 +38,6 @@ export default function TrustChallenge() {
   const [index, setIndex] = useState(0);
   const [session, setSession] = useState("");
   const [score, setScore] = useState<Score | null>(null);
-  const [selected, setSelected] = useState<number | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -48,7 +47,6 @@ export default function TrustChallenge() {
   const startRound = (round: "A" | "B") => {
     setOrder(shuffle(items ?? []));
     setIndex(0);
-    setSelected(null);
     setPhase(round);
   };
 
@@ -68,7 +66,6 @@ export default function TrustChallenge() {
     }
     if (index + 1 < order.length) {
       setIndex(index + 1);
-      setSelected(null);
     } else if (phase === "A") {
       startRound("B");
     } else {
@@ -119,21 +116,9 @@ export default function TrustChallenge() {
           </div>
           <p className="text-sm text-ink-muted">Question</p>
           <p className="text-lg font-semibold">{item.question}</p>
-          <p className="text-sm text-ink-muted">OCBC AI's answer</p>
-          {phase === "A" ? (
-            <p className="rounded-xl border border-line bg-canvas px-4 py-3 text-[15px] leading-relaxed">{item.answer}</p>
-          ) : (
-            <div className="space-y-3">
-              <VerdictBanner verdict={item.checks.verdict} inReview={false} />
-              <HighlightedAnswer checks={item.checks} selected={selected} onSelect={setSelected} />
-              <div className="rounded-xl border border-line p-4">
-                <EvidencePanel sentence={item.checks.sentences.find((s) => s.index === selected)} />
-              </div>
-              <div className="rounded-xl border border-line p-4">
-                <p className="mb-2 text-sm font-bold">Why this verdict</p>
-                <FlagList flags={item.checks.flags} />
-              </div>
-            </div>
+          <AgentAnswer title="answer" text={item.answer} checked={phase === "B"} />
+          {phase === "B" && (
+            <AnswerView key={`${phase}-${item.id}`} checks={item.checks} title="checks OCBC AI's answer" mode="study" />
           )}
           <div className="flex flex-wrap gap-2 border-t border-line pt-4">
             <button className="btn-primary" onClick={() => choose("trust")}>

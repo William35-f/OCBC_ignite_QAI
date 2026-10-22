@@ -17,17 +17,23 @@ export default function VerdictBanner({
   inReview,
   corrected = false,
   reviewed = false,
+  retrying = false,
 }: {
   verdict: Verdict;
   inReview: boolean;
   corrected?: boolean;
   reviewed?: boolean;
+  retrying?: boolean;
 }) {
   const v = VERDICTS[verdict];
   let title = v.title;
   let text = inReview && verdict !== "Red" ? "A reviewer will check this answer." : v.text;
   if (verdict === "Amber" && inReview) title = "Amber: sent for review – check before acting";
   if (verdict === "Green" && corrected) title = "Green: corrected answer – checks passed";
+  if (retrying) {
+    title = `${verdict}: not good enough yet – Q AI asks OCBC AI to try again`;
+    text = "Some sentences could not be verified. OCBC AI gets one more try below.";
+  }
   if (reviewed) {
     title = `${verdict}: reviewed by a person – see their decision below`;
     text = "Q AI flagged OCBC AI's answer, and a reviewer has now checked it.";
