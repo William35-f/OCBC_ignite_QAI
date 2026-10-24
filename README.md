@@ -17,25 +17,38 @@ Three roles, switched in the top bar (no login): **Rachel Lim** (Employee, Branc
 
 ---
 
-## Quick start
+## Quick start (any computer)
 
-Requirements: **Python 3.11+** (built with 3.13), **Node 18+**. Windows, macOS or Linux.
+You need three free tools, installed once:
+
+| Tool | Get it | Check it works |
+|---|---|---|
+| **Git** | https://git-scm.com/downloads | `git --version` |
+| **Node.js 18 or newer** (LTS) | https://nodejs.org | `node --version` |
+| **uv** (recommended – installs the right Python by itself) | https://docs.astral.sh/uv/getting-started/installation/ | `uv --version` |
+
+No uv? Install **Python 3.12 or 3.13** from https://www.python.org/downloads/ instead (on Windows tick
+"Add python.exe to PATH"). Python 3.11 or older will not work.
 
 ```bash
-cd q-ai
-npm install          # root helper (concurrently)
-npm run setup        # Python venv + backend packages, frontend packages, .env files
-npm run dev          # backend http://127.0.0.1:8000 + frontend http://localhost:5173
+git clone https://github.com/William35-f/OCBC_ignite_QAI.git
+cd OCBC_ignite_QAI
+npm run setup        # once: Python packages (exact tested versions), website packages, .env files
+npm run dev          # every time: backend http://127.0.0.1:8000 + website http://localhost:5173
 ```
 
-Open **http://localhost:5173**. The first start downloads the embedding model
-(sentence-transformers all-MiniLM-L6-v2, about 90 MB). After that everything runs **offline** with the
-default mock LLM provider.
+Open **http://localhost:5173**. The first start needs internet to download the embedding model
+(sentence-transformers all-MiniLM-L6-v2, about 90 MB) and can take 1–2 minutes. After that everything runs
+**offline** with the default mock LLM provider – no API key needed.
+
+`npm run setup` installs the exact package versions in `backend/requirements.lock.txt` (tested on
+Windows with Python 3.13), so every computer runs the same code. It takes a few minutes and about 1.5 GB
+of disk, mostly PyTorch. To get later changes: `git pull`, then `npm run setup` again.
 
 | Command | What it does |
 |---|---|
 | `npm run dev` | Start backend and frontend (Ctrl+C stops both) |
-| `npm test` | Backend tests (pytest, 135 tests, about 20 s) |
+| `npm test` | Backend tests (pytest, 138 tests, about 20 s) |
 | `npm run eval` | Run the evaluation (same as `python -m app.eval` in `backend/`) |
 | `npm run reset` | Wipe the demo database (stop `npm run dev` first) |
 | `npm run build` | Production build of the frontend |
@@ -45,7 +58,9 @@ default mock LLM provider.
 
 | You see | Fix |
 |---|---|
-| `npm error Missing script: "dev"` | You are in the wrong folder. `cd` into the `q-ai` folder first. |
+| `npm error Missing script: "dev"` | You are in the wrong folder. `cd` into the project folder (the one with `package.json`) first. |
+| `Setup stopped: Python 3.12 or 3.13 was not found` | Install uv (recommended) or Python 3.13, then run `npm run setup` again. |
+| `Backend virtualenv not found` | Run `npm run setup` first. |
 | "Waiting for the Q AI backend to load…" for a while | Normal on the first start after a reboot: the machine-learning libraries and the embedding model take 1–2 minutes to load. The website starts by itself once the backend prints "Q AI backend ready". |
 | "Cannot reach the Q AI backend" in the browser | The backend is not running or still loading. Check the `[api]` lines in the terminal. |
 | `address already in use` / port 8000 or 5173 busy | An old `npm run dev` is still running. Close that terminal (or Ctrl+C in it), then start again. |
@@ -240,7 +255,7 @@ as partly answered, and it labels some no-evidence claims "Unsupported" instead 
 ## Project structure
 
 ```
-q-ai/
+OCBC_ignite_QAI/   (this repository; the local folder may be called q-ai)
   package.json            npm run setup / dev / test / eval / reset
   scripts/                setup, run-backend, reset helpers
   data/
